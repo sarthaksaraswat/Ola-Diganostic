@@ -27,9 +27,9 @@
 
 ## 📸 Application Screenshots
 
-| ⚡ Live Telemetry Cockpit | 🔋 14S Battery Health & SOH | 📊 14-Series Cell Balancer |
+| ⚡ Live Telemetry Cockpit | 🔋 Battery Diagnosis & Health | 📊 Cell Voltage Balancer |
 | :---: | :---: | :---: |
-| <img src="screenshots/01-cockpit-telemetry.png" width="260" alt="Telemetry Cockpit" /> | <img src="screenshots/02-battery-health.png" width="260" alt="14S Battery Diagnostics" /> | <img src="screenshots/03-cell-balancer.png" width="260" alt="14-Series Cell Voltages" /> |
+| <img src="screenshots/01-cockpit-telemetry.png" width="260" alt="Telemetry Cockpit" /> | <img src="screenshots/02-battery-health.png" width="260" alt="Battery Diagnosis" /> | <img src="screenshots/03-cell-balancer.png" width="260" alt="Cell Voltage Balancer" /> |
 
 | 🔧 Powertrain & Hardware Calibration | ⚠️ Active DTC Fault Codes & Safety Alerts |
 | :---: | :---: |
@@ -43,10 +43,10 @@
 - **Live Speed & Rotor RPM:** Precision vehicle velocity (km/h) and motor stator RPM.
 - **Pack Voltage & Current:** High-voltage bus level (V) and continuous draw (A) across acceleration, cruising, and regen.
 - **State of Charge (SOC) & Power (kW):** Instant battery percentage, active kilowatt draw, and lifetime odometer (km).
-- **Cell Delta Spread:** Live millivolt difference between highest and lowest NMC cells in real time.
+- **Cell Delta Spread:** Live millivolt difference between highest and lowest cells in real time.
 
-### 2. 🔋 14S NMC Battery Balancer & Health Engine
-- **14 Individual Cell Voltages:** Real-time channel 1 through 14 voltages mapped from CAN IDs `0x1A5`, `0x1A6`, `0x1A9`, and `0x1AA`.
+### 2. 🔋 Battery Diagnosis & Health Engine
+- **Individual Cell Voltages:** Real-time cell voltage monitoring across all channels with automated drift and balance tracking.
 - **Rest vs Under-Load Sag Analysis:** Dynamic comparison between zero-load resting OCV and peak loaded acceleration (up to 118A+ WOT).
 - **6 Pack Temperature Sensors:** Multi-probe thermal monitoring (Front, Left, Right, Rear, Core, and BMS AFE).
 - **Coulomb Integrator SOH:** Coulomb-counting battery state-of-health estimation comparing actual Ah throughput against nominal 72 Ah factory capacity.

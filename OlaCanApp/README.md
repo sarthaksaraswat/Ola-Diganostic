@@ -40,8 +40,8 @@ A modern Android application built with **Kotlin & Jetpack Compose** to connect 
 - **Instant Power (kW) & Odometer:** Real-time motor power draw and lifetime odometer.
 - **Cell Delta Spread (mV):** Imbalance difference between highest and lowest cell voltages.
 
-### 2. 🔋 14S Battery Balancer & Health
-- **14 Individual NMC Cell Voltages:** Channels 1 to 14 voltages (`0x1A5`, `0x1A6`, `0x1A9`, `0x1AA`) with min/max indicator badges.
+### 2. 🔋 Battery Diagnosis & Health
+- **Individual Cell Voltages:** Live individual cell voltages with min/max indicator badges and balance tracking.
 - **Dynamic Rest vs Under-Load Sag:** Differential analysis comparing resting OCV against peak acceleration (>50A).
 - **6 Pack Thermal Probes:** Readings across Front, Left, Right, Rear, Core, and BMS AFE probes.
 - **Coulomb SOH Estimator:** Usable kWh and health percentage calculation based on discharged ampere-hours.
