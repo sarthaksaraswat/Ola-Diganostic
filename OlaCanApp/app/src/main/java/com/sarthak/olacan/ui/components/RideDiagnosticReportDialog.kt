@@ -293,7 +293,7 @@ fun RideDiagnosticReportDialog(
 
                 // Battery Pack & 14S Cell Matrix
                 Text(
-                    text = "14S BATTERY HEALTH & DYNAMIC IMPEDANCE",
+                    text = "BATTERY HEALTH & DYNAMIC IMPEDANCE",
                     color = TextSecondary,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,

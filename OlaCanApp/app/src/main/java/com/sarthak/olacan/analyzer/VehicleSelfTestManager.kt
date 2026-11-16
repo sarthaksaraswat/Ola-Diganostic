@@ -182,9 +182,9 @@ object VehicleSelfTestManager {
             ),
             SubsystemTestItem(
                 id = "BATTERY_HEALTH",
-                name = "14S NMC Battery Health & Cell Imbalance",
+                name = "Battery Health & Cell Imbalance",
                 category = "BATTERY",
-                description = "Evaluates 14 series cell resting voltage spread, pack usable SOH, and BMS capacity"
+                description = "Evaluates series cell resting voltage spread, pack usable SOH, and BMS capacity"
             ),
             SubsystemTestItem(
                 id = "BATTERY_THERMALS",

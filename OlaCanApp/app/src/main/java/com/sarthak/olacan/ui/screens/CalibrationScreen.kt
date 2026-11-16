@@ -119,7 +119,7 @@ enum class CalibrationRoutine(
 ) {
     BMS_BALANCING(
         title = "BMS Cell Balancing & Float Guard",
-        subtitle = "14S cell delta reduction, CV float keep-awake & AFE reset",
+        subtitle = "Cell delta reduction, CV float keep-awake & AFE reset",
         category = "Battery",
         icon = Icons.Default.BatteryChargingFull,
         badgeLabel = "BMS",
@@ -730,7 +730,7 @@ private fun BmsBalancingSubPage(viewModel: TelemetryViewModel) {
                     ) {
                         Column {
                             Text(
-                                text = "14S CELL DELTA SPREAD",
+                                text = "CELL DELTA SPREAD",
                                 color = M3OnSurfaceVariant,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold
@@ -775,7 +775,7 @@ private fun BmsBalancingSubPage(viewModel: TelemetryViewModel) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "14S Delta Target Progress",
+                            text = "Delta Target Progress",
                             color = M3OnSurfaceVariant,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Medium
@@ -817,7 +817,7 @@ private fun BmsBalancingSubPage(viewModel: TelemetryViewModel) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "14-SERIES CELL VOLTAGES & BLEED SHUNTS",
+                            text = "SERIES CELL VOLTAGES & BLEED SHUNTS",
                             color = M3OnSurfaceVariant,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold

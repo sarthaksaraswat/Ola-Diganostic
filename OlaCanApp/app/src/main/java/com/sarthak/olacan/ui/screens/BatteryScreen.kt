@@ -118,10 +118,30 @@ fun BatteryScreen(
     var active14sViewMode by remember { mutableStateOf("live") } // "live", "noLoad", "underLoad"
 
     val validCells = battery.cellVoltagesV.filter { !it.isNaN() && it > 1.5 }
+    val detectedSeriesCount = if (validCells.isNotEmpty()) validCells.size else 14
     val liveCells = if (validCells.size >= 14) validCells else restCellsFlow
     val restCells = restCellsFlow
     val loadCells = loadCellsFlow
     val cellRis = if (battery.cellInternalResistancesMOhms.isNotEmpty()) battery.cellInternalResistancesMOhms else cellRisFlow
+
+    val avgSeriesV = if (liveCells.isNotEmpty()) liveCells.average() else 3.67
+    val totalStackV = if (liveCells.isNotEmpty()) liveCells.sum() else (battery.busVoltageV.takeIf { !it.isNaN() && it > 10.0 } ?: 51.42)
+    val estimatedPackKwh = when {
+        !coulombState.calibratedCapacityKwh.isNaN() && coulombState.calibratedCapacityKwh > 3.4 -> 4.0
+        !coulombState.calibratedCapacityKwh.isNaN() && coulombState.calibratedCapacityKwh in 2.5..3.4 -> 3.0
+        !coulombState.calibratedCapacityKwh.isNaN() && coulombState.calibratedCapacityKwh in 1.5..2.5 -> 2.0
+        !battery.bmsNominalCapacityAh.isNaN() && battery.bmsNominalCapacityAh > 60.0 -> 4.0
+        !battery.bmsNominalCapacityAh.isNaN() && battery.bmsNominalCapacityAh in 45.0..60.0 -> 3.0
+        !battery.bmsNominalCapacityAh.isNaN() && battery.bmsNominalCapacityAh in 25.0..45.0 -> 2.0
+        else -> 4.0
+    }
+    val parallelCount = when (estimatedPackKwh) {
+        4.0 -> 8
+        3.0 -> 6
+        2.0 -> 4
+        else -> 8
+    }
+    val totalCellCount = detectedSeriesCount * parallelCount
 
 
     val liveDeltaMv = if (!battery.cellDeltaMv.isNaN() && battery.cellDeltaMv > 0) {
@@ -205,7 +225,7 @@ fun BatteryScreen(
 
                     Column {
                         Text(
-                            text = "Battery & Cell Analysis",
+                            text = "Battery Diagnosis",
                             color = M3OnSurface,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
@@ -222,7 +242,7 @@ fun BatteryScreen(
                     }
                 }
 
-                // Clean Chemistry Badge
+                // Clean Pack Architecture Badge
                 Surface(
                     color = M3SurfaceContainerHigh,
                     shape = RoundedCornerShape(8.dp),
@@ -232,8 +252,8 @@ fun BatteryScreen(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text("CHEMISTRY", color = M3Outline, fontSize = 7.5.sp, fontWeight = FontWeight.Bold, fontFamily = AppFont, maxLines = 1)
-                        Text("14S NMC", color = M3Primary, fontSize = 10.5.sp, fontWeight = FontWeight.Bold, fontFamily = AppFont, maxLines = 1)
+                        Text("PACK ARCH", color = M3Outline, fontSize = 7.5.sp, fontWeight = FontWeight.Bold, fontFamily = AppFont, maxLines = 1)
+                        Text("${detectedSeriesCount}S · ${parallelCount}P", color = M3Primary, fontSize = 10.5.sp, fontWeight = FontWeight.Bold, fontFamily = AppFont, maxLines = 1)
                     }
                 }
             }
@@ -373,7 +393,7 @@ fun BatteryScreen(
                             )
                             Text(
                                 text = if (worstRiCell != null) "Cell #${worstRiCell.first} elevated (${String.format(Locale.US, "%.1f", worstRiCell.second)} mΩ)"
-                                       else "All 14 series cells nominal (< 2.5 mΩ)",
+                                       else "All series cells nominal (< 2.5 mΩ)",
                                 color = M3Outline,
                                 fontSize = 8.sp,
                                 lineHeight = 11.sp,
@@ -905,7 +925,8 @@ fun BatteryScreen(
         }
 
         // -------------------------------------------------------------
-        // 5. 14-SERIES NMC CELL VOLTAGES (3-WAY VIEW TOGGLE)
+        // 4B. BATTERY PACK ARCHITECTURE & SERIES CONFIGURATION
+        // Explains Series (S) × Parallel (P) strings and total voltage summation
         // -------------------------------------------------------------
         Surface(
             color = M3SurfaceContainer,
@@ -924,7 +945,142 @@ fun BatteryScreen(
                 ) {
                     Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                         Text(
-                            text = "14-SERIES NMC CELL VOLTAGES",
+                            text = "BATTERY PACK CONFIGURATION",
+                            color = M3OnSurface,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 0.8.sp,
+                            fontFamily = AppFont
+                        )
+                        Text(
+                            text = "Series (S) × Parallel (P) architecture & total voltage summation",
+                            color = M3Outline,
+                            fontSize = 10.sp,
+                            fontFamily = AppFont
+                        )
+                    }
+
+                    Surface(
+                        color = M3Primary.copy(alpha = 0.15f),
+                        shape = RoundedCornerShape(6.dp),
+                        border = BorderStroke(1.dp, M3Primary.copy(alpha = 0.3f))
+                    ) {
+                        Text(
+                            text = "${detectedSeriesCount}S · ${parallelCount}P (~${String.format(Locale.US, "%.0f", estimatedPackKwh)} kWh)",
+                            color = M3Primary,
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = AppFont,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
+                            maxLines = 1
+                        )
+                    }
+                }
+
+                // 4 Grid Tiles: Series Count, Parallel Strings, Avg Series Voltage, Total Stack Voltage
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Series Tile
+                    Surface(
+                        color = M3Surface,
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, M3OutlineVariant.copy(alpha = 0.3f)),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Column(modifier = Modifier.padding(8.dp)) {
+                            Text("SERIES (S)", color = M3Outline, fontSize = 8.sp, fontWeight = FontWeight.Bold, fontFamily = AppFont)
+                            Text("${detectedSeriesCount} Series", color = M3OnSurface, fontSize = 12.sp, fontWeight = FontWeight.Bold, fontFamily = AppFont)
+                            Text("Multiplies Volts", color = M3Outline, fontSize = 7.5.sp, fontFamily = AppFont)
+                        }
+                    }
+                    // Parallel Tile
+                    Surface(
+                        color = M3Surface,
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, M3OutlineVariant.copy(alpha = 0.3f)),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Column(modifier = Modifier.padding(8.dp)) {
+                            Text("PARALLEL (P)", color = M3Outline, fontSize = 8.sp, fontWeight = FontWeight.Bold, fontFamily = AppFont)
+                            Text("${parallelCount} Strings", color = M3OnSurface, fontSize = 12.sp, fontWeight = FontWeight.Bold, fontFamily = AppFont)
+                            Text("Multiplies Ah", color = M3Outline, fontSize = 7.5.sp, fontFamily = AppFont)
+                        }
+                    }
+                    // Avg Series Voltage Tile
+                    Surface(
+                        color = M3Surface,
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, M3OutlineVariant.copy(alpha = 0.3f)),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Column(modifier = Modifier.padding(8.dp)) {
+                            Text("SERIES AVG", color = M3Outline, fontSize = 8.sp, fontWeight = FontWeight.Bold, fontFamily = AppFont)
+                            Text("${String.format(Locale.US, "%.3f", avgSeriesV)} V", color = M3Primary, fontSize = 12.sp, fontWeight = FontWeight.Bold, fontFamily = AppFont)
+                            Text("per series cell", color = M3Outline, fontSize = 7.5.sp, fontFamily = AppFont)
+                        }
+                    }
+                    // Total Stack Voltage Tile
+                    Surface(
+                        color = M3Surface,
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, M3OutlineVariant.copy(alpha = 0.3f)),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Column(modifier = Modifier.padding(8.dp)) {
+                            Text("STACK TOTAL", color = M3Outline, fontSize = 8.sp, fontWeight = FontWeight.Bold, fontFamily = AppFont)
+                            Text("${String.format(Locale.US, "%.1f", totalStackV)} V", color = M3Success, fontSize = 12.sp, fontWeight = FontWeight.Bold, fontFamily = AppFont)
+                            Text("Up to ~56–58V", color = M3Outline, fontSize = 7.5.sp, fontFamily = AppFont)
+                        }
+                    }
+                }
+
+                // Explainer Card
+                Surface(
+                    color = M3SurfaceContainerHigh,
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(Icons.Default.Info, contentDescription = null, tint = M3Primary, modifier = Modifier.size(16.dp))
+                        Text(
+                            text = "Pack Architecture: ${detectedSeriesCount} series groups × ${parallelCount} parallel strings ($totalCellCount cylindrical cells total). Each series group operates at ~${String.format(Locale.US, "%.2f", avgSeriesV)}V, combining in series to deliver ${String.format(Locale.US, "%.1f", totalStackV)}V (totalling up to ~56–58V at 100% full charge).",
+                            color = M3OnSurfaceVariant,
+                            fontSize = 9.sp,
+                            fontFamily = AppFont,
+                            lineHeight = 13.sp
+                        )
+                    }
+                }
+            }
+        }
+
+        // -------------------------------------------------------------
+        // 5. INDIVIDUAL SERIES CELL VOLTAGES (3-WAY VIEW TOGGLE)
+        // -------------------------------------------------------------
+        Surface(
+            color = M3SurfaceContainer,
+            shape = RoundedCornerShape(16.dp),
+            border = BorderStroke(1.dp, M3OutlineVariant.copy(alpha = 0.4f)),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                        Text(
+                            text = "INDIVIDUAL SERIES CELL VOLTAGES",
                             color = M3OnSurface,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
@@ -932,9 +1088,9 @@ fun BatteryScreen(
                             fontFamily = AppFont
                         )
                         val subtitleText = when (active14sViewMode) {
-                            "noLoad" -> "Nominal resting voltages in park mode (0A standstill)"
-                            "underLoad" -> "Voltages captured under acceleration load (>50A)"
-                            else -> "Live real-time cell voltages across 14 channels"
+                            "noLoad" -> "Nominal resting series voltages in park mode (0A standstill)"
+                            "underLoad" -> "Series voltages captured under acceleration load (>50A)"
+                            else -> "Live real-time voltages across $detectedSeriesCount series channels (Sum: ${String.format(Locale.US, "%.1f", totalStackV)}V)"
                         }
                         Text(
                             text = subtitleText,
@@ -1104,7 +1260,7 @@ fun BatteryScreen(
                     ) {
                         Icon(Icons.Default.CheckCircle, contentDescription = null, tint = M3Success, modifier = Modifier.size(14.dp))
                         Text(
-                            text = "All 14 series cells nominal (< 2.5 mΩ avg). Zero sag bottlenecks.",
+                            text = "All $detectedSeriesCount series cells nominal (< 2.5 mΩ avg). Zero sag bottlenecks.",
                             color = M3OnSurfaceVariant,
                             fontSize = 11.sp,
                             fontFamily = AppFont

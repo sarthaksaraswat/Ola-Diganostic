@@ -198,7 +198,7 @@ fun BatteryHealthReportDialog(
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = "14S NMC Pack Tested on ${report.testDateFormatted}",
+                                    text = "Battery Pack Tested on ${report.testDateFormatted}",
                                     color = TextSecondary,
                                     fontSize = 11.sp
                                 )
