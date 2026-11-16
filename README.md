@@ -2,9 +2,9 @@
 
 ## Releases
 
-**[Download Ola Diagnostic 2.0.0 for Android (.apk)](https://github.com/sarthaksaraswat/Ola-Diganostic/releases/download/v2.0.0/OlaDiagnostic-v2.0.0.apk)**
+**[Download Ola Diagnostic 2.0.1 for Android (.apk)](https://github.com/sarthaksaraswat/Ola-Diganostic/releases/download/v2.0.1/OlaDiagnostic-v2.0.1.apk)**
 
-Signed prerelease for Android 8.0+. [Release notes](https://github.com/sarthaksaraswat/Ola-Diganostic/releases/tag/v2.0.0) · [All releases](https://github.com/sarthaksaraswat/Ola-Diganostic/releases)
+Signed prerelease for Android 8.0+. [Release notes](https://github.com/sarthaksaraswat/Ola-Diganostic/releases/tag/v2.0.1) · [All releases](https://github.com/sarthaksaraswat/Ola-Diganostic/releases)
 
 <p align="center">
   <img src="ola_diagnostic_icon.png" width="140" height="140" alt="Ola Diagnostic App Icon" />
