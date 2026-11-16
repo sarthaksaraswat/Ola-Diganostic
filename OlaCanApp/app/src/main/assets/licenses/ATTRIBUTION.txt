@@ -1,0 +1,9 @@
+The bundled faults.json is the same fault catalog distributed by Ola S1 REA.
+Ola S1 REA attributes this catalog to Axiom (https://codeberg.org/pitzel/axiom)
+under the Apache License, Version 2.0.
+
+The app's diagnostic protocol and command behavior draw on Ola S1 REA and
+S1 Mods. See the accompanying MIT copyright and permission notices.
+
+Source Sans Pro 2.045 is distributed under the SIL Open Font License 1.1.
+See Source-Sans-Pro-OFL.txt for the upstream notice.

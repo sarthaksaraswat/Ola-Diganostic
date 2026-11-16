@@ -1,0 +1,18 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Scooter Seat Cushion Contour -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M3,12.8 C3,11.5 4.5,10.5 7,10.5 C10,10.5 12,9 15,9 C18.5,9 21,10 21.5,11.5 C22,12.8 21,14.2 19,14.8 C15.5,15.6 8.5,15.6 4.5,14.8 C3.5,14.5 3,13.8 3,12.8 Z" />
+    <!-- Under-seat storage tub / frame latch base -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M6,16.5 L18,16.5 C18.6,16.5 19,17 18.8,17.5 C18.3,18.8 16.5,20 12,20 C7.5,20 5.7,18.8 5.2,17.5 C5,17 5.4,16.5 6,16.5 Z" />
+    <!-- Unlatch / Release upward arrow -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,4 L15,7 L13,7 L13,9 L11,9 L11,7 L9,7 Z" />
+</vector>
