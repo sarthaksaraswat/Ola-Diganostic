@@ -25,6 +25,7 @@ local.properties
 
 # Local binaries and signing material
 *.apk
+!/OlaDiagnostic-v*.apk
 *.aab
 *.jks
 *.keystore
