@@ -19,7 +19,7 @@
 
 ### 📲 Latest Release Download
 
-👉 **[Download Ola Diagnostic v2.0.2 APK (Signed Release)](OlaDiagnostic-v2.0.2.apk)**
+👉 **[Download Ola Diagnostic v2.0.2 APK (Signed Release)](OlaDiagnostic-v2.0.2.apk)** &nbsp;|&nbsp; 📦 **[View GitHub Release v2.0.2](https://github.com/sarthaksaraswat/Ola-Diganostic/releases/tag/v2.0.2)**
 
 *Signed release for Android 8.0+ (ARM64 / x86_64). Simply download the `.apk` file directly on your Android phone and tap to install.*
 

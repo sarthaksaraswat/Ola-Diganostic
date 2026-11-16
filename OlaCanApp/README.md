@@ -17,7 +17,7 @@ A modern Android application built with **Kotlin & Jetpack Compose** to connect 
 ## ⚡ Quick Start
 
 1. **Install APK or Build:**
-   - Install the signed release **`../OlaDiagnostic-v2.0.2.apk`** directly on your device.
+   - Install the signed release **`../OlaDiagnostic-v2.0.2.apk`** directly on your device, or download from the **[GitHub Release v2.0.2](https://github.com/sarthaksaraswat/Ola-Diganostic/releases/tag/v2.0.2)**.
    - Or build debug build from source:
      ```bash
      ./gradlew :app:assembleDebug
