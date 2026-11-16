@@ -13,7 +13,6 @@
   <img src="https://img.shields.io/badge/Version-v2.0.2-brightgreen?style=flat" alt="Version" />
   <img src="https://img.shields.io/badge/Platform-Android_8.0+-3DDC84?style=flat&logo=android&logoColor=white" alt="Android" />
   <img src="https://img.shields.io/badge/Architecture-Kotlin_%7C_Compose-7F52FF?style=flat&logo=kotlin&logoColor=white" alt="Kotlin" />
-  <img src="https://img.shields.io/badge/Status-Production_Ready-success?style=flat" alt="Status" />
 </p>
 
 ---
@@ -22,40 +21,29 @@
 
 👉 **[Download Ola Diagnostic v2.0.2 APK (Signed Release)](OlaDiagnostic-v2.0.2.apk)**
 
-*Signed for Android 8.0+ (ARM64 / x86_64). Ready for direct phone installation or sideloading via ADB.*
-
-```bash
-adb install -r OlaDiagnostic-v2.0.2.apk
-```
-
----
-
-> [!CAUTION]
-> **Warranty & Safety Disclaimer:**
-> This project is an independent open-source tool and is **NOT affiliated with, endorsed by, or sponsored by Ola Electric Mobility Pvt Ltd**.
-> Interacting with MoveOS diagnostic interfaces, unlatching safety registers, or sending custom frames on vehicle CAN buses carries inherent risks. Improper use **may void your scooter's manufacturer warranty**, affect MoveOS software support, or alter vehicle behavior. The software is provided "as is" strictly for diagnostic, research, and educational purposes.
+*Signed release for Android 8.0+ (ARM64 / x86_64). Simply download the `.apk` file directly on your Android phone and tap to install.*
 
 ---
 
 ## 📸 Application Screenshots
 
-| ⚡ Live Telemetry Cockpit | 🔋 14S Battery & SOH Engine |
-| :---: | :---: |
-| <img src="screenshots/01-cockpit-telemetry.png" width="300" alt="Telemetry Cockpit" /> | <img src="screenshots/02-battery-health-probes.png" width="300" alt="14S Battery Health & Probes" /> |
+| ⚡ Live Telemetry Cockpit | 🔋 14S Battery Health & SOH | 📊 14-Series Cell Balancer |
+| :---: | :---: | :---: |
+| <img src="screenshots/01-cockpit-telemetry.png" width="260" alt="Telemetry Cockpit" /> | <img src="screenshots/02-battery-health.png" width="260" alt="14S Battery Diagnostics" /> | <img src="screenshots/03-cell-balancer.png" width="260" alt="14-Series Cell Voltages" /> |
 
-| 🏍️ Motor & Inverter Thermals | 🛡️ Diagnostic Self-Test Suite |
+| 🔧 Powertrain & Hardware Calibration | ⚠️ Active DTC Fault Codes & Safety Alerts |
 | :---: | :---: |
-| <img src="screenshots/03-motor-powertrain-thermals.png" width="300" alt="Motor Powertrain & Thermals" /> | <img src="screenshots/04-vehicle-self-test.png" width="300" alt="Vehicle Diagnostic Self-Test" /> |
+| <img src="screenshots/04-vehicle-calibration.png" width="260" alt="Hardware Calibration" /> | <img src="screenshots/05-faults-diagnostics.png" width="260" alt="DTC Fault Codes" /> |
 
 ---
 
 ## ⚡ Core Capabilities & Features
 
 ### 1. ⚡ Live Telemetry Cockpit
-- **Real-Time Speed & Stator RPM:** Precision vehicle speed (km/h) and motor rotor angular velocity.
-- **Pack Voltage & Current:** Live high-voltage bus readings (V) and continuous draw (A) across acceleration, cruising, and regen.
+- **Live Speed & Rotor RPM:** Precision vehicle velocity (km/h) and motor stator RPM.
+- **Pack Voltage & Current:** High-voltage bus level (V) and continuous draw (A) across acceleration, cruising, and regen.
 - **State of Charge (SOC) & Power (kW):** Instant battery percentage, active kilowatt draw, and lifetime odometer (km).
-- **Cell Delta Spread:** Live millivolt difference between the highest and lowest NMC cells in real time.
+- **Cell Delta Spread:** Live millivolt difference between highest and lowest NMC cells in real time.
 
 ### 2. 🔋 14S NMC Battery Balancer & Health Engine
 - **14 Individual Cell Voltages:** Real-time channel 1 through 14 voltages mapped from CAN IDs `0x1A5`, `0x1A6`, `0x1A9`, and `0x1AA`.
@@ -100,7 +88,7 @@ adb install -r OlaDiagnostic-v2.0.2.apk
 
 ```
 ├── OlaDiagnostic-v2.0.2.apk   # Compiled, signed release binary ready for installation
-├── screenshots/               # UI captures showcasing app features
+├── screenshots/               # High-resolution live vehicle UI captures
 ├── ola_diagnostic_icon.png    # Official app branding icon
 ├── OlaCanApp/                 # Complete Kotlin & Jetpack Compose Android Studio project
 │   ├── app/
@@ -125,6 +113,13 @@ To build from source using the Gradle wrapper (requires Android SDK 35 & JDK 17)
 cd OlaCanApp
 ./gradlew :app:assembleRelease
 ```
+
+---
+
+> [!CAUTION]
+> **Warranty & Safety Disclaimer:**
+> This project is an independent open-source tool and is **NOT affiliated with, endorsed by, or sponsored by Ola Electric Mobility Pvt Ltd**.
+> Interacting with MoveOS diagnostic interfaces, unlatching safety registers, or sending custom frames on vehicle CAN buses carries inherent risks. Improper use **may void your scooter's manufacturer warranty**, affect MoveOS software support, or alter vehicle behavior. The software is provided "as is" strictly for diagnostic, research, and educational purposes.
 
 ---
 
