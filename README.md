@@ -1,8 +1,12 @@
+<h1 align="center">Ola Diagnostic</h1>
+
+<h2 align="center"><a href="https://github.com/sarthaksaraswat/Ola-Diganostic/releases/download/v2.0.0/OlaDiagnostic-v2.0.0.apk">Download Ola Diagnostic for Android (.apk)</a></h2>
+
+<p align="center">Version 2.0.0 · Signed prerelease · Android 8.0+ · <a href="https://github.com/sarthaksaraswat/Ola-Diganostic/releases/tag/v2.0.0">Release notes</a></p>
+
 <p align="center">
   <img src="ola_diagnostic_icon.png" width="140" height="140" alt="Ola Diagnostic App Icon" />
 </p>
-
-<h1 align="center">Ola Diagnostic</h1>
 
 <p align="center">
   <b>Advanced Automotive CAN Telemetry & Diagnostic Suite for Ola Electric S1 / S1 Pro / S1 Air</b><br>
