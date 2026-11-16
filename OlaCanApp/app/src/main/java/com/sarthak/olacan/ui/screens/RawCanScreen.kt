@@ -121,6 +121,7 @@ fun RawCanScreen(
     val logAnalysisFramesCount by viewModel.logAnalysisFramesCount.collectAsState()
 
     var isStreamPaused by remember { mutableStateOf(false) }
+    var frozenFrames by remember { mutableStateOf<List<CanFrame>>(emptyList()) }
     var filterText by remember { mutableStateOf("") }
     var showRideReportDialog by remember { mutableStateOf(false) }
     var showAppLogDialog by remember { mutableStateOf(false) }
@@ -233,10 +234,11 @@ fun RawCanScreen(
         AppLogViewerDialog(onDismiss = { showAppLogDialog = false })
     }
 
-    val filteredFrames = remember(frames, filterText) {
-        if (filterText.isBlank()) frames else {
+    val activeFrames = if (isStreamPaused) frozenFrames else frames
+    val filteredFrames = remember(activeFrames, filterText) {
+        if (filterText.isBlank()) activeFrames else {
             val q = filterText.trim().lowercase(Locale.ROOT)
-            frames.filter { frame ->
+            activeFrames.filter { frame ->
                 frame.idHex.lowercase(Locale.ROOT).contains(q) ||
                         frame.id.toString().contains(q) ||
                         frame.dataHex.lowercase(Locale.ROOT).contains(q) ||
@@ -725,6 +727,9 @@ fun RawCanScreen(
                             border = BorderStroke(1.dp, M3OutlineVariant.copy(alpha = 0.4f)),
                             modifier = Modifier.clickable {
                                 HapticHelper.performClick(view)
+                                if (!isStreamPaused) {
+                                    frozenFrames = frames
+                                }
                                 isStreamPaused = !isStreamPaused
                             }
                         ) {
@@ -764,8 +769,8 @@ fun RawCanScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "LIVE CAN BUS STREAM (${filteredFrames.size} FRAMES)",
-                                color = M3Outline,
+                                text = if (isStreamPaused) "FROZEN CAN BUS SNAPSHOT (${filteredFrames.size} FRAMES)" else "LIVE CAN BUS STREAM (${filteredFrames.size} FRAMES)",
+                                color = if (isStreamPaused) M3Primary else M3Outline,
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 0.5.sp,
@@ -825,8 +830,11 @@ fun RawCanScreen(
                     }
                 }
             }
-        } else if (!isStreamPaused) {
-            items(filteredFrames.take(40)) { frame ->
+        } else {
+            items(
+                items = filteredFrames.take(40),
+                key = { frame -> "${frame.timestampMs}_${frame.id}_${frame.dataHex}" }
+            ) { frame ->
                 CanFrameRowItem(frame = frame)
             }
         }

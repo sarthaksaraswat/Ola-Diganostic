@@ -1028,7 +1028,7 @@ fun OverviewScreen(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     // 1. Lock / Unlock
                     val isLocked = vehicle.isLocked
@@ -1046,7 +1046,7 @@ fun OverviewScreen(
                             }
                     ) {
                         Column(
-                            modifier = Modifier.padding(vertical = 14.dp, horizontal = 4.dp),
+                            modifier = Modifier.padding(vertical = 14.dp, horizontal = 2.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
@@ -1059,7 +1059,7 @@ fun OverviewScreen(
                             Text(
                                 text = if (isLocked) "Unlock" else "Lock",
                                 color = M3OnSurface,
-                                fontSize = 12.sp,
+                                fontSize = 11.5.sp,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = AppFont,
                                 textAlign = TextAlign.Center,
@@ -1083,7 +1083,7 @@ fun OverviewScreen(
                             }
                     ) {
                         Column(
-                            modifier = Modifier.padding(vertical = 14.dp, horizontal = 4.dp),
+                            modifier = Modifier.padding(vertical = 14.dp, horizontal = 2.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
@@ -1096,7 +1096,7 @@ fun OverviewScreen(
                             Text(
                                 text = "Open Seat",
                                 color = M3OnSurface,
-                                fontSize = 12.sp,
+                                fontSize = 11.5.sp,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = AppFont,
                                 textAlign = TextAlign.Center,
@@ -1105,7 +1105,44 @@ fun OverviewScreen(
                         }
                     }
 
-                    // 3. Restart Scooter
+                    // 3. Wake Screen
+                    Surface(
+                        color = M3SurfaceContainerHigh,
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, M3Primary.copy(alpha = 0.35f)),
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable {
+                                HapticHelper.performClick(view)
+                                CanStreamManager.wakeScooter { success, msg ->
+                                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(vertical = 14.dp, horizontal = 2.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Bolt,
+                                contentDescription = "Wake Screen",
+                                tint = M3Primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Text(
+                                text = "Wake Screen",
+                                color = M3OnSurface,
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = AppFont,
+                                textAlign = TextAlign.Center,
+                                maxLines = 1
+                            )
+                        }
+                    }
+
+                    // 4. Restart Scooter
                     Surface(
                         color = M3SurfaceContainerHigh,
                         shape = RoundedCornerShape(12.dp),
@@ -1118,7 +1155,7 @@ fun OverviewScreen(
                             }
                     ) {
                         Column(
-                            modifier = Modifier.padding(vertical = 14.dp, horizontal = 4.dp),
+                            modifier = Modifier.padding(vertical = 14.dp, horizontal = 2.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
@@ -1131,7 +1168,7 @@ fun OverviewScreen(
                             Text(
                                 text = "Restart",
                                 color = M3OnSurface,
-                                fontSize = 12.sp,
+                                fontSize = 11.5.sp,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = AppFont,
                                 textAlign = TextAlign.Center,

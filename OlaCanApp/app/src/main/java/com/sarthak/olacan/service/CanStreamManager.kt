@@ -44,6 +44,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Collections
 import java.util.Locale
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
 /**
@@ -155,7 +156,7 @@ object CanStreamManager {
     val isAppInBackground = MutableStateFlow(false)
 
     // Rate calculation & distinct CAN ID tracking
-    private var frameCountInInterval = 0
+    private val frameCountInInterval = AtomicInteger(0)
     private val totalFramesCounter = AtomicLong(0L)
     private val seenCanIds = java.util.BitSet(0x800)
     private val distinctIdsCount = java.util.concurrent.atomic.AtomicInteger(0)
@@ -239,8 +240,7 @@ object CanStreamManager {
 
                 // Rate calculation & 1 Hz streamStats update (dampens recomposition from 5 Hz to 1 Hz)
                 if (deltaSec >= 1.0) {
-                    val fps = frameCountInInterval / deltaSec
-                    frameCountInInterval = 0
+                    val fps = frameCountInInterval.getAndSet(0) / deltaSec
                     lastTickTime = now
 
                     streamStats.value = streamStats.value.copy(
@@ -557,7 +557,7 @@ object CanStreamManager {
                         if (client !== grpc) return@frames
                         decoder.processFrame(frame)
                     }
-                    frameCountInInterval++
+                    frameCountInInterval.incrementAndGet()
                     totalFramesCounter.incrementAndGet()
 
                     if (frame.id in 0..0x7FF && !seenCanIds.get(frame.id)) {
@@ -665,7 +665,17 @@ object CanStreamManager {
 
         disconnectClientOnly()
         CoulombHealthManager.finalizeCalibration()
+        decoder.invalidateSpeed()
+        powertrainState.value = powertrainState.value.copy(
+            speedKmh = 0.0,
+            wheelSpeedKmh = 0.0,
+            motorRpm = 0.0,
+            motorTorqueNm = 0.0,
+            motorPhaseCurrentA = 0.0,
+            throttlePercent = 0.0
+        )
 
+        frameCountInInterval.set(0)
         seenCanIds.clear()
         distinctIdsCount.set(0)
         pendingFramesBuffer.clear()
@@ -1101,13 +1111,6 @@ object CanStreamManager {
      * Toggles vehicle lock state (Locks if unlocked, Unlocks if locked).
      */
     fun toggleLock(onResult: (success: Boolean, message: String) -> Unit) {
-        val currentSpeed = powertrainState.value.speedKmh
-        if (!currentSpeed.isNaN() && currentSpeed > 0.5) {
-            onResult(false, "Safety Interlock: Cannot lock or unlock while scooter is moving (${String.format(Locale.US, "%.1f", currentSpeed)} km/h)")
-            return
-        }
-
-        val isVehicleAwake = streamStats.value.isAwake
         val isCurrentlyLocked = vehicleStatus.value.isLocked
         val shouldLock = !isCurrentlyLocked
 
@@ -1117,6 +1120,14 @@ object CanStreamManager {
             onResult(true, if (shouldLock) "Scooter locked (Demo Mode)" else "Scooter unlocked (Demo Mode)")
             return
         }
+
+        val currentSpeed = powertrainState.value.speedKmh
+        if (!currentSpeed.isNaN() && currentSpeed > 0.5) {
+            onResult(false, "Safety Interlock: Cannot lock or unlock while scooter is moving (${String.format(Locale.US, "%.1f", currentSpeed)} km/h)")
+            return
+        }
+
+        val isVehicleAwake = streamStats.value.isAwake
 
         val grpc = client
         if (grpc == null) {
@@ -1167,6 +1178,13 @@ object CanStreamManager {
      * Releases boot (under-seat storage latch), even if currently reported as open.
      */
     fun releaseBoot(onResult: (success: Boolean, message: String) -> Unit) {
+        if (isDemoMode.value) {
+            decoder.setSimulatedBoot(true)
+            vehicleStatus.value = vehicleStatus.value.copy(isBootOpen = true)
+            onResult(true, "Boot released (Demo Mode) ✓")
+            return
+        }
+
         val currentSpeed = powertrainState.value.speedKmh
         if (!currentSpeed.isNaN() && currentSpeed > 0.5) {
             onResult(false, "Safety Interlock: Cannot release boot while scooter is moving (${String.format(Locale.US, "%.1f", currentSpeed)} km/h)")
@@ -1174,13 +1192,6 @@ object CanStreamManager {
         }
 
         val isVehicleAwake = streamStats.value.isAwake
-
-        if (isDemoMode.value) {
-            decoder.setSimulatedBoot(true)
-            vehicleStatus.value = vehicleStatus.value.copy(isBootOpen = true)
-            onResult(true, "Boot released (Demo Mode) ✓")
-            return
-        }
 
         val grpc = client
         if (grpc == null) {
@@ -1261,14 +1272,14 @@ object CanStreamManager {
      * Restarts the scooter: full system / Android OS reboot or fast Dash UI reset.
      */
     fun restartScooter(fullReboot: Boolean, onResult: (success: Boolean, message: String) -> Unit) {
-        val currentSpeed = powertrainState.value.speedKmh
-        if (!currentSpeed.isNaN() && currentSpeed > 0.5) {
-            onResult(false, "Safety Interlock: Cannot restart scooter while in motion (${String.format(Locale.US, "%.1f", currentSpeed)} km/h)")
+        if (isDemoMode.value) {
+            onResult(true, if (fullReboot) "Simulated full vehicle reboot initiated (Demo Mode)" else "Simulated HMI restart initiated (Demo Mode)")
             return
         }
 
-        if (isDemoMode.value) {
-            onResult(true, if (fullReboot) "Simulated full vehicle reboot initiated (Demo Mode)" else "Simulated HMI restart initiated (Demo Mode)")
+        val currentSpeed = powertrainState.value.speedKmh
+        if (!currentSpeed.isNaN() && currentSpeed > 0.5) {
+            onResult(false, "Safety Interlock: Cannot restart scooter while in motion (${String.format(Locale.US, "%.1f", currentSpeed)} km/h)")
             return
         }
 
@@ -1316,12 +1327,6 @@ object CanStreamManager {
         onProgress: (step: String, progress: Float) -> Unit,
         onResult: (success: Boolean, message: String) -> Unit
     ) {
-        val speed = powertrainState.value.speedKmh
-        if (!speed.isNaN() && speed > 0.5) {
-            onResult(false, "Safety Interlock: Cannot run motor calibration while scooter is moving (${String.format(Locale.US, "%.1f", speed)} km/h)")
-            return
-        }
-
         if (isDemoMode.value) {
             scope.launch {
                 onProgress("Safety Interlock Verified: 0.0 km/h (Paddock Stand)", 0.15f)
@@ -1337,6 +1342,12 @@ object CanStreamManager {
                 onProgress("Motor parameter identification complete (100%)", 1.0f)
                 onResult(true, "Motor parameter identification complete. Offset: 34.2° stored in MCU NVM ✓")
             }
+            return
+        }
+
+        val speed = powertrainState.value.speedKmh
+        if (!speed.isNaN() && speed > 0.5) {
+            onResult(false, "Safety Interlock: Cannot run motor calibration while scooter is moving (${String.format(Locale.US, "%.1f", speed)} km/h)")
             return
         }
 
@@ -1596,12 +1607,6 @@ object CanStreamManager {
         onProgress: (step: String, progress: Float) -> Unit = { _, _ -> },
         onResult: (success: Boolean, message: String) -> Unit
     ) {
-        val speed = powertrainState.value.speedKmh
-        if (!speed.isNaN() && speed > 0.5) {
-            onResult(false, "Safety Interlock: Cannot calibrate throttle while moving (${String.format(Locale.US, "%.1f", speed)} km/h)")
-            return
-        }
-
         if (isDemoMode.value) {
             scope.launch {
                 onProgress("Sampling untouched grip idle rest voltages...", 0.25f)
@@ -1625,6 +1630,12 @@ object CanStreamManager {
                     onResult(true, "Throttle deadband zeroed: Grip rest position (0.95V) calibrated to 0% Neutral ✓")
                 }
             }
+            return
+        }
+
+        val speed = powertrainState.value.speedKmh
+        if (!speed.isNaN() && speed > 0.5) {
+            onResult(false, "Safety Interlock: Cannot calibrate throttle while moving (${String.format(Locale.US, "%.1f", speed)} km/h)")
             return
         }
 
@@ -1700,12 +1711,6 @@ object CanStreamManager {
         onProgress: (step: String, progress: Float) -> Unit = { _, _ -> },
         onResult: (success: Boolean, message: String) -> Unit
     ) {
-        val speed = powertrainState.value.speedKmh
-        if (!speed.isNaN() && speed > 0.5) {
-            onResult(false, "Safety Interlock: Scooter must be stationary (${String.format(Locale.US, "%.1f", speed)} km/h)")
-            return
-        }
-
         if (isDemoMode.value) {
             scope.launch {
                 onProgress("Verifying stationary level orientation...", 0.20f)
@@ -1719,6 +1724,12 @@ object CanStreamManager {
                 onProgress("IMU 6-Axis Zero Level calibrated to 0.0° ✓", 1.0f)
                 onResult(true, "IMU 6-Axis Zero Level calibrated to 0.0° (Demo Mode) ✓")
             }
+            return
+        }
+
+        val speed = powertrainState.value.speedKmh
+        if (!speed.isNaN() && speed > 0.5) {
+            onResult(false, "Safety Interlock: Scooter must be stationary (${String.format(Locale.US, "%.1f", speed)} km/h)")
             return
         }
 

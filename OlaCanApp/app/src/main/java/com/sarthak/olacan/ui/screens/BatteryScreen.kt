@@ -118,8 +118,8 @@ fun BatteryScreen(
     var active14sViewMode by remember { mutableStateOf("live") } // "live", "noLoad", "underLoad"
 
     val validCells = battery.cellVoltagesV.filter { !it.isNaN() && it > 1.5 }
-    val detectedSeriesCount = if (validCells.isNotEmpty()) validCells.size else 14
-    val liveCells = if (validCells.size >= 14) validCells else restCellsFlow
+    val detectedSeriesCount = if (validCells.isNotEmpty()) validCells.size else (if (restCellsFlow.isNotEmpty()) restCellsFlow.size else 14)
+    val liveCells = if (validCells.isNotEmpty()) validCells else restCellsFlow
     val restCells = restCellsFlow
     val loadCells = loadCellsFlow
     val cellRis = if (battery.cellInternalResistancesMOhms.isNotEmpty()) battery.cellInternalResistancesMOhms else cellRisFlow
@@ -1168,11 +1168,12 @@ fun BatteryScreen(
                     val minV = validValues.minOrNull() ?: 3.682
                     val maxV = validValues.maxOrNull() ?: 3.696
 
-                    for (i in 0 until 14) {
+                    val renderCount = if (cellsToRender.isNotEmpty()) cellsToRender.size else detectedSeriesCount
+                    for (i in 0 until renderCount) {
                         val chNum = i + 1
                         val chVolt = if (i < cellsToRender.size) cellsToRender[i] else 3.690
-                        val isMin = (chVolt == minV && validValues.size >= 14)
-                        val isMax = (chVolt == maxV && validValues.size >= 14)
+                        val isMin = (chVolt == minV && validValues.size >= 2)
+                        val isMax = (chVolt == maxV && validValues.size >= 2)
                         val ri = if (i < cellRis.size) cellRis[i] else Double.NaN
 
                         CellVoltageBar(

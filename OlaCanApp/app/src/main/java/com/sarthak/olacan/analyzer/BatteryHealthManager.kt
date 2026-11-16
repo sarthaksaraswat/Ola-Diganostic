@@ -59,6 +59,7 @@ object BatteryHealthManager {
     val chargeCheck = _chargeCheck.asStateFlow()
 
     // Logging components for unified log file
+    private val writerLock = Any()
     private var testLogFile: File? = null
     private var gzipStream: GZIPOutputStream? = null
     private var gzipWriter: BufferedWriter? = null
@@ -215,21 +216,23 @@ object BatteryHealthManager {
     }
 
     private fun initUnifiedLogFile(context: Context) {
-        closeLogWriters()
-        val file = File(context.cacheDir, "active_battery_health_test.csv.gz")
-        testLogFile = file
+        synchronized(writerLock) {
+            closeLogWriters()
+            val file = File(context.cacheDir, "active_battery_health_test.csv.gz")
+            testLogFile = file
 
-        val fos = FileOutputStream(file)
-        val bos = BufferedOutputStream(fos, 64 * 1024)
-        val gzos = GZIPOutputStream(bos)
-        val writer = BufferedWriter(OutputStreamWriter(gzos, StandardCharsets.UTF_8), 16 * 1024)
+            val fos = FileOutputStream(file)
+            val bos = BufferedOutputStream(fos, 64 * 1024)
+            val gzos = GZIPOutputStream(bos)
+            val writer = BufferedWriter(OutputStreamWriter(gzos, StandardCharsets.UTF_8), 16 * 1024)
 
-        val header = "timestamp_ms,id_hex,dlc,data_hex\n"
-        writer.write(header)
-        writer.flush()
+            val header = "timestamp_ms,id_hex,dlc,data_hex\n"
+            writer.write(header)
+            writer.flush()
 
-        gzipStream = gzos
-        gzipWriter = writer
+            gzipStream = gzos
+            gzipWriter = writer
+        }
     }
 
     /**
@@ -243,10 +246,12 @@ object BatteryHealthManager {
             lastActiveResumeTimeMs = 0L
         }
 
-        try {
-            gzipWriter?.flush()
-            gzipStream?.flush()
-        } catch (_: Exception) {}
+        synchronized(writerLock) {
+            try {
+                gzipWriter?.flush()
+                gzipStream?.flush()
+            } catch (_: Exception) {}
+        }
 
         _liveStats.value = _liveStats.value.copy(
             status = BatteryTestStatus.PAUSED,
@@ -266,16 +271,18 @@ object BatteryHealthManager {
         lastFrameTimeMs = lastActiveResumeTimeMs
 
         // Reconnect writers if stream was closed
-        val file = testLogFile
-        if (gzipWriter == null && file != null && file.exists()) {
-            try {
-                // If writers were cleared, append or reopen
-                val fos = FileOutputStream(file, true)
-                val bos = BufferedOutputStream(fos, 64 * 1024)
-                val gzos = GZIPOutputStream(bos)
-                gzipStream = gzos
-                gzipWriter = BufferedWriter(OutputStreamWriter(gzos, StandardCharsets.UTF_8), 16 * 1024)
-            } catch (_: Exception) {}
+        synchronized(writerLock) {
+            val file = testLogFile
+            if (gzipWriter == null && file != null && file.exists()) {
+                try {
+                    // If writers were cleared, append or reopen
+                    val fos = FileOutputStream(file, true)
+                    val bos = BufferedOutputStream(fos, 64 * 1024)
+                    val gzos = GZIPOutputStream(bos)
+                    gzipStream = gzos
+                    gzipWriter = BufferedWriter(OutputStreamWriter(gzos, StandardCharsets.UTF_8), 16 * 1024)
+                } catch (_: Exception) {}
+            }
         }
 
         _liveStats.value = _liveStats.value.copy(
@@ -320,16 +327,18 @@ object BatteryHealthManager {
             }
 
             // Write frame to the single unified log file
-            val writer = gzipWriter
-            if (writer != null) {
-                try {
-                    writer.write("${frame.timestampMs},${frame.idHex},${frame.dlc},${frame.compactDataHex}\n")
-                    totalFramesWritten++
-                    if (totalFramesWritten % 1500L == 0L) {
-                        writer.flush()
-                        gzipStream?.flush()
-                    }
-                } catch (_: Exception) {}
+            synchronized(writerLock) {
+                val writer = gzipWriter
+                if (writer != null) {
+                    try {
+                        writer.write("${frame.timestampMs},${frame.idHex},${frame.dlc},${frame.compactDataHex}\n")
+                        totalFramesWritten++
+                        if (totalFramesWritten % 1500L == 0L) {
+                            writer.flush()
+                            gzipStream?.flush()
+                        }
+                    } catch (_: Exception) {}
+                }
             }
 
             val now = frame.timestampMs
@@ -745,14 +754,16 @@ object BatteryHealthManager {
     }
 
     private fun closeLogWriters() {
-        try {
-            gzipWriter?.flush()
-            gzipWriter?.close()
-            gzipStream?.finish()
-            gzipStream?.close()
-        } catch (_: Exception) {}
-        gzipWriter = null
-        gzipStream = null
+        synchronized(writerLock) {
+            try {
+                gzipWriter?.flush()
+                gzipWriter?.close()
+                gzipStream?.finish()
+                gzipStream?.close()
+            } catch (_: Exception) {}
+            gzipWriter = null
+            gzipStream = null
+        }
     }
 
     private fun saveFileToDownloads(context: Context, sourceFile: File, targetName: String, mimeType: String): Uri? {
