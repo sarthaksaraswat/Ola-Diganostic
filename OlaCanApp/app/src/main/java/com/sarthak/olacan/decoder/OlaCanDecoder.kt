@@ -1082,11 +1082,11 @@ class OlaCanDecoder {
                     isActive = (b4 and 0x01) != 0
                 )
 
-                // Byte 5 bit 0: Inhibit Regen Fault Flag (0x122 startbit 40: Battery_Inhibit_Regen_Fault_00)
+                // Byte 5 bit 0: Inhibit Regen Status Flag (0x122 startbit 40: Battery_Inhibit_Regen_Fault_00)
                 updateAlert(
                     id = "bmsRegenInhibitFlag",
                     title = "BMS Regen Braking Inhibit",
-                    description = "Regenerative braking temporarily restricted by BMS (typical at high SOC >95%, cold pack, or continuous braking). Pack temp nominal.",
+                    description = "Regenerative braking is temporarily paused by the BMS (normal operational advisory: battery near full >95%, pack cool, or to prevent cell overcharge). Not an error or vehicle fault code.",
                     severity = AlertSeverity.INFO,
                     component = "BMS",
                     sourceCanId = "0x122",

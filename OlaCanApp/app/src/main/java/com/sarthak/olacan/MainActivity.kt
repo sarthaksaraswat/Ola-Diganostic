@@ -94,6 +94,7 @@ import com.sarthak.olacan.ui.theme.M3SurfaceContainer
 import com.sarthak.olacan.ui.theme.M3SurfaceContainerHigh
 import com.sarthak.olacan.ui.theme.M3Warning
 import com.sarthak.olacan.analyzer.VehicleSelfTestManager
+import com.sarthak.olacan.model.AlertSeverity
 import com.sarthak.olacan.ui.theme.OlaCanViewerTheme
 import com.sarthak.olacan.util.FaultCatalog
 import com.sarthak.olacan.util.HapticHelper
@@ -323,15 +324,19 @@ fun MainContent(viewModel: TelemetryViewModel) {
                                 selectedTab = tab
                             },
                             icon = {
-                                if (tab == MainAppTab.FAULTS && activeAlerts.isNotEmpty()) {
+                                val criticalCount = if (tab == MainAppTab.FAULTS) activeAlerts.count { it.severity == AlertSeverity.CRITICAL } else 0
+                                val warningCount = if (tab == MainAppTab.FAULTS) activeAlerts.count { it.severity == AlertSeverity.WARNING } else 0
+                                if (tab == MainAppTab.FAULTS && (criticalCount > 0 || warningCount > 0)) {
+                                    val badgeColor = if (criticalCount > 0) M3Error else M3Warning
+                                    val countText = if (criticalCount > 0) "$criticalCount" else "$warningCount"
                                     BadgedBox(
                                         badge = {
                                             Badge(
-                                                containerColor = M3Error,
+                                                containerColor = badgeColor,
                                                 contentColor = M3Surface
                                             ) {
                                                 Text(
-                                                    text = "${activeAlerts.size}",
+                                                    text = countText,
                                                     fontSize = 9.sp,
                                                     fontWeight = FontWeight.Bold
                                                 )
@@ -341,14 +346,13 @@ fun MainContent(viewModel: TelemetryViewModel) {
                                         Icon(
                                             imageVector = tab.icon,
                                             contentDescription = tab.title,
-                                            tint = if (isSelected) M3Primary else M3Error
+                                            tint = if (isSelected) M3Primary else badgeColor
                                         )
                                     }
                                 } else {
                                     Icon(
                                         imageVector = tab.icon,
-                                        contentDescription = tab.title,
-                                        tint = if (isSelected) M3Primary else M3Outline
+                                        contentDescription = tab.title
                                     )
                                 }
                             },

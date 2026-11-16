@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Warning
@@ -146,6 +147,13 @@ fun WarningsScreen(
         }
     }
 
+    val criticalFaults = remember(activeAlerts) {
+        activeAlerts.filter { it.severity == AlertSeverity.CRITICAL }
+    }
+    val operationalNotices = remember(activeAlerts) {
+        activeAlerts.filter { it.severity != AlertSeverity.CRITICAL }
+    }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -154,13 +162,13 @@ fun WarningsScreen(
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         // -------------------------------------------------------------
-        // 1. ACTIVE CAN FAULTS SECTION (ALWAYS PRESENT)
+        // 1. ACTIVE CAN FAULTS SECTION (CRITICAL HARDWARE ERRORS)
         // -------------------------------------------------------------
         item {
             Surface(
                 color = M3SurfaceContainer,
                 shape = RoundedCornerShape(14.dp),
-                border = BorderStroke(1.dp, if (activeAlerts.isNotEmpty()) M3Error else M3Success.copy(alpha = 0.4f)),
+                border = BorderStroke(1.dp, if (criticalFaults.isNotEmpty()) M3Error else M3Success.copy(alpha = 0.4f)),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
@@ -178,14 +186,14 @@ fun WarningsScreen(
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Icon(
-                                imageVector = if (activeAlerts.isNotEmpty()) Icons.Default.Warning else Icons.Default.CheckCircle,
+                                imageVector = if (criticalFaults.isNotEmpty()) Icons.Default.Warning else Icons.Default.CheckCircle,
                                 contentDescription = null,
-                                tint = if (activeAlerts.isNotEmpty()) M3Error else M3Success,
+                                tint = if (criticalFaults.isNotEmpty()) M3Error else M3Success,
                                 modifier = Modifier.size(16.dp)
                             )
                             Text(
-                                text = if (activeAlerts.isNotEmpty()) "ACTIVE FAULT CODES FOUND (${activeAlerts.size})" else "ACTIVE FAULT CODES (0)",
-                                color = if (activeAlerts.isNotEmpty()) M3Error else M3Success,
+                                text = if (criticalFaults.isNotEmpty()) "ACTIVE FAULT CODES FOUND (${criticalFaults.size})" else "ACTIVE FAULT CODES (0)",
+                                color = if (criticalFaults.isNotEmpty()) M3Error else M3Success,
                                 fontSize = 11.5.sp,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = AppFont,
@@ -193,7 +201,7 @@ fun WarningsScreen(
                             )
                         }
 
-                        if (activeAlerts.isNotEmpty()) {
+                        if (criticalFaults.isNotEmpty()) {
                             Box(
                                 modifier = Modifier
                                     .background(M3ErrorContainer, RoundedCornerShape(4.dp))
@@ -230,8 +238,8 @@ fun WarningsScreen(
                         }
                     }
 
-                    if (activeAlerts.isNotEmpty()) {
-                        activeAlerts.forEach { alert ->
+                    if (criticalFaults.isNotEmpty()) {
+                        criticalFaults.forEach { alert ->
                             Surface(
                                 color = M3SurfaceContainerHigh,
                                 shape = RoundedCornerShape(10.dp),
@@ -288,12 +296,112 @@ fun WarningsScreen(
                                         fontFamily = AppFont
                                     )
                                     Text(
-                                        text = "Zero active fault codes broadcast over CAN bus. BMS, MCU, VCU, and ABS controllers reporting healthy operation.",
+                                        text = "Zero active critical fault codes broadcast over CAN bus. BMS, MCU, VCU, and ABS controllers reporting healthy operation.",
                                         color = M3OnSurfaceVariant,
                                         fontSize = 10.5.sp,
                                         lineHeight = 14.sp,
                                         fontFamily = AppFont
                                     )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // -------------------------------------------------------------
+        // 1B. OPERATIONAL WARNINGS & ADVISORIES (NORMAL VEHICLE BEHAVIORS)
+        // -------------------------------------------------------------
+        if (operationalNotices.isNotEmpty()) {
+            item {
+                Surface(
+                    color = M3SurfaceContainer,
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.dp, M3Warning.copy(alpha = 0.45f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                modifier = Modifier.weight(1f).padding(end = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Info,
+                                    contentDescription = null,
+                                    tint = M3Warning,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = "OPERATIONAL WARNINGS & NOTICES (${operationalNotices.size})",
+                                    color = M3Warning,
+                                    fontSize = 11.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = AppFont,
+                                    maxLines = 1
+                                )
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .background(M3WarningContainer, RoundedCornerShape(4.dp))
+                                    .border(1.dp, M3Warning.copy(alpha = 0.4f), RoundedCornerShape(4.dp))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = "NORMAL ADVISORY",
+                                    color = M3Warning,
+                                    fontSize = 8.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = AppFont,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
+                            }
+                        }
+
+                        Text(
+                            text = "Standard MoveOS operating limits & advisories (e.g., regen pause near 100% SOC, temporary thermal derates). These are expected vehicle behaviors, not hardware faults.",
+                            color = M3OnSurfaceVariant,
+                            fontSize = 10.5.sp,
+                            lineHeight = 14.sp,
+                            fontFamily = AppFont
+                        )
+
+                        operationalNotices.forEach { alert ->
+                            val alertColor = if (alert.severity == AlertSeverity.WARNING) M3Warning else M3Primary
+                            Surface(
+                                color = M3SurfaceContainerHigh,
+                                shape = RoundedCornerShape(10.dp),
+                                border = BorderStroke(1.dp, alertColor.copy(alpha = 0.4f)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(10.dp),
+                                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(alert.title, color = M3OnSurface, fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                                        Text(
+                                            text = if (alert.severity == AlertSeverity.WARNING) "WARNING" else "ADVISORY",
+                                            color = alertColor,
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                    Text(alert.description, color = M3OnSurfaceVariant, fontSize = 10.5.sp, lineHeight = 14.sp)
+                                    Text("CAN Source: ${alert.sourceCanIdHex} • Component: ${alert.component}", color = M3Outline, fontSize = 9.sp)
                                 }
                             }
                         }
