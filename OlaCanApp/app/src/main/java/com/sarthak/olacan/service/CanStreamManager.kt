@@ -42,6 +42,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
 import java.util.Collections
 import java.util.Locale
@@ -66,6 +67,7 @@ object CanStreamManager {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default + coroutineExceptionHandler)
 
     private val decoder = OlaCanDecoder()
+    private val vehicleCommandLock = Mutex()
     private val logRecorder = LogRecorder()
     @Volatile private var client: S1GrpcStreamClient? = null
     private var connectJob: Job? = null
@@ -1100,15 +1102,27 @@ object CanStreamManager {
 
     private suspend fun S1GrpcStreamClient.sendVehicleCommand(
         command: String,
-        timeoutSeconds: Long
-    ) {
-        check(BuildConfig.DEBUG) { "Live vehicle controls are disabled in this build." }
-        synchronized(decoder) {
-            check(client === this && streamStats.value.isConnected) { "Scooter connection changed." }
-            check(decoder.isStationary()) { "Fresh stationary speed telemetry is required." }
+        timeoutSeconds: Long,
+        availableInRelease: Boolean = false
+    ) = withContext(Dispatchers.IO) {
+        check(availableInRelease || BuildConfig.DEBUG) { "This workshop control requires a development build." }
+        check(vehicleCommandLock.tryLock()) { "Another vehicle command is in progress." }
+        try {
+            if (availableInRelease) {
+                val context = checkNotNull(appContext)
+                check(isOnLocalWifi(context)) { "Connect to the scooter on your local Wi-Fi or phone hotspot." }
+            }
+            synchronized(decoder) {
+                check(client === this@sendVehicleCommand && streamStats.value.isConnected && !isDemoMode.value) {
+                    "Scooter connection changed."
+                }
+                check(decoder.isStationary()) { "Fresh stationary speed telemetry is required. Wake the parked scooter and try again." }
+            }
+            val (status, _) = shell(command, timeoutSeconds)
+            check(status == 1) { "MoveOS did not acknowledge the command." }
+        } finally {
+            vehicleCommandLock.unlock()
         }
-        val response = shell(command, timeoutSeconds)
-        check(response.first == 1) { "MoveOS did not acknowledge the command." }
     }
 
     /**
@@ -1147,7 +1161,7 @@ object CanStreamManager {
                 } else {
                     "cansend vcan0 6A1#0100000000000000; cansend vcan0 6BC#1900000000000000; input keyevent 224; input keyevent 82; svc power stayon true"
                 }
-                grpc.sendVehicleCommand(command, 10L)
+                grpc.sendVehicleCommand(command, 10L, availableInRelease = true)
                 withContext(Dispatchers.Main) {
                     onResult(true, if (shouldLock) "Lock request sent." else "Unlock request sent.")
                 }
@@ -1188,7 +1202,7 @@ object CanStreamManager {
             try {
                 // Send CAN latch release frames FIRST for sub-millisecond physical response
                 val command = "cansend vcan0 6A1#0500000000000000; cansend vcan0 6BC#0300000000000000; svc power stayon true"
-                grpc.sendVehicleCommand(command, 10L)
+                grpc.sendVehicleCommand(command, 10L, availableInRelease = true)
                 withContext(Dispatchers.Main) {
                     onResult(true, "Boot release request sent.")
                 }
@@ -1220,7 +1234,7 @@ object CanStreamManager {
             try {
                 // Exact S1 Mods v1.4 wake sequence: wake panel, dismiss keyguard, and enable stayon
                 val command = "input keyevent 224; input keyevent 82; svc power stayon true"
-                grpc.sendVehicleCommand(command, 8L)
+                grpc.sendVehicleCommand(command, 8L, availableInRelease = true)
                 withContext(Dispatchers.Main) {
                     onResult(true, "Display wake request sent.")
                 }
@@ -1261,7 +1275,7 @@ object CanStreamManager {
                 } else {
                     "svc power stayon true && am force-stop com.olaelectric.hmiclient && am start -n com.olaelectric.hmiclient/.MainActivity && input keyevent 224 && input keyevent 82"
                 }
-                grpc.sendVehicleCommand(command, 8L)
+                grpc.sendVehicleCommand(command, 8L, availableInRelease = true)
 
                 withContext(Dispatchers.Main) {
                     if (fullReboot) {
@@ -1456,13 +1470,7 @@ object CanStreamManager {
             try {
                 onProgress("Sending AFE unlatch signal (CAN 0x6DA)...", 0.30f)
                 val cmd = "cansend vcan0 6DA#0100000000000000; sleep 0.2; cansend vcan0 6DA#0000000000000000; am broadcast -a com.olaelectric.action.CLEAR_BMS_FAULTS"
-                grpc.sendVehicleCommand(cmd, 6L)
-                onProgress("Unlocking Coulomb counter lockouts...", 0.75f)
-                delay(300)
-                if (!streamStats.value.isConnected) {
-                    onResult(false, "AFE reset aborted: Vehicle disconnected.")
-                    return@launch
-                }
+                grpc.sendVehicleCommand(cmd, 6L, availableInRelease = true)
                 onProgress("AFE reset request sent.", 1.0f)
                 withContext(Dispatchers.Main) {
                     onResult(true, "AFE reset request sent.")
@@ -1755,7 +1763,7 @@ object CanStreamManager {
                 onProgress("Transmitting CAN 0x115 regen configuration...", 0.35f)
                 val regenByte = String.format(Locale.US, "%02x", clamped)
                 val cmd = "cansend vcan0 115#${regenByte}00000000000000; am broadcast -a com.olaelectric.action.SET_REGEN_LEVEL --ei level $clamped"
-                grpc.sendVehicleCommand(cmd, 6L)
+                grpc.sendVehicleCommand(cmd, 6L, availableInRelease = true)
                 onProgress("Regen level request sent to MoveOS.", 1.0f)
                 withContext(Dispatchers.Main) {
                     onResult(true, "Regen level request sent: $label.")

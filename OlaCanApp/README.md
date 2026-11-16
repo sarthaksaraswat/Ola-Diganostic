@@ -95,6 +95,6 @@ Phone (Hotspot / Wi-Fi)
 
 ## Safety and compatibility
 
-Release builds disable live vehicle-control commands. Development builds require fresh stationary speed telemetry for live commands. Demo mode simulates the dashboard without a vehicle connection.
+Release builds support live lock/unlock, seat release, display wake, restart, AFE reset, and regen requests on local Wi-Fi or hotspot. Live commands require fresh stationary speed telemetry. The app reports acknowledged requests and shows vehicle state separately from live telemetry. Demo mode simulates the dashboard without a vehicle connection.
 
 The app uses the MoveOS diagnostic service over local Wi-Fi. The firmware check starts at MoveOS 4.0.5. Verify compatibility with your specific model and firmware. Vehicle use and maintenance decisions should follow the manufacturer's guidance.

@@ -300,7 +300,7 @@ private fun CalibrationHubView(
         // 2. Safety Interlock Notice Card
         item {
             val speed = powertrain.speedKmh
-            val isStationary = speed.isNaN() || speed <= 0.5
+            val isStationary = speed in 0.0..0.5
 
             Surface(
                 color = if (isStationary) M3SurfaceContainer else M3Error.copy(alpha = 0.12f),
@@ -321,13 +321,17 @@ private fun CalibrationHubView(
                     )
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = if (isStationary) "Safety Interlocks: Normal (Stationary 0.0 km/h)" else "Interlock Warning: Vehicle Moving (${String.format(Locale.US, "%.1f", speed)} km/h)",
+                            text = when {
+                                isStationary -> "Vehicle speed: stationary"
+                                !speed.isFinite() -> "Vehicle speed unavailable"
+                                else -> "Vehicle moving (${String.format(Locale.US, "%.1f", speed)} km/h)"
+                            },
                             color = if (isStationary) M3OnSurface else M3Error,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = if (isStationary) "Scooter must remain safely parked on stand during active calibration." else "Calibration routines are locked until the vehicle comes to a complete halt.",
+                            text = if (isStationary) "Scooter must remain safely parked on stand during active calibration." else "Keep the scooter parked and awake so live speed is available.",
                             color = M3OnSurfaceVariant,
                             fontSize = 11.sp
                         )
@@ -1036,7 +1040,7 @@ private fun MotorAutoTuneSubPage(viewModel: TelemetryViewModel) {
     var showConfirmDialog by remember { mutableStateOf(false) }
 
     val speed = powertrain.speedKmh
-    val isStationary = speed.isNaN() || speed <= 0.5
+    val isStationary = speed in 0.0..0.5
     val throttleZero = powertrain.throttlePercent.isNaN() || powertrain.throttlePercent <= 1.0
 
     val measuredOffset = if (calib.offsetAngleMechanicalDegree.isNaN()) 34.2 else calib.offsetAngleMechanicalDegree

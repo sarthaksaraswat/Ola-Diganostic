@@ -42,7 +42,7 @@ cd OlaCanApp
 
 Sign the generated release APK with your own release key before distribution.
 
-Public release builds support telemetry, CAN logs, and reports. Live vehicle controls are disabled. Compatibility depends on the scooter model and firmware. The app's current firmware check starts at MoveOS 4.0.5. Hardware support needs verification per model and firmware.
+Public release builds support telemetry, CAN logs, reports, and live lock/unlock, seat release, display wake, restart, AFE reset, and regen requests. Send live commands only while parked on a trusted local Wi-Fi network or your own hotspot. The app requires fresh stationary speed telemetry. Compatibility depends on the scooter model and firmware. The app's current firmware check starts at MoveOS 4.0.5. Hardware support needs verification per model and firmware.
 
 ---
 

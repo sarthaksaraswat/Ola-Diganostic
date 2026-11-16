@@ -1,5 +1,6 @@
 package com.sarthak.olacan.network
 
+import android.content.Context
 import android.util.Base64
 import com.sarthak.olacan.model.CanFrame
 import com.sarthak.olacan.model.EcuVersions
@@ -28,6 +29,7 @@ class S1GrpcStreamClient(
     val scope: Int? = null
 ) {
     private var channel: ManagedChannel? = null
+    @Volatile private var connectedPeer: InetAddress? = null
     private var activeStreamCall: ClientCall<ByteArray, ByteArray>? = null
     private val isClosedManually = AtomicBoolean(false)
 
@@ -88,7 +90,9 @@ class S1GrpcStreamClient(
         close()
         isClosedManually.set(false)
 
-        val targetHost = resolveTargetHost()
+        val resolvedHost = resolveTargetHost()
+        val peer = try { InetAddress.getByName(resolvedHost) } catch (_: java.net.UnknownHostException) { null }
+        val targetHost = peer?.hostAddress ?: resolvedHost
         try {
             val ch = OkHttpChannelBuilder.forAddress(targetHost, port)
                 .usePlaintext()
@@ -102,6 +106,7 @@ class S1GrpcStreamClient(
             // Quick connectivity verification using id -u (matching S1Mods)
             val (status, out) = executeRaw("id -u", timeoutSeconds)
             if (status in 0..1 || out.isNotBlank()) {
+                connectedPeer = peer
                 true
             } else {
                 close()
@@ -112,6 +117,9 @@ class S1GrpcStreamClient(
             false
         }
     }
+
+    fun isOnLocalWifi(context: Context): Boolean =
+        connectedPeer?.let { NetworkScanner.isOnWifiLink(context, it) } == true
 
     suspend fun executeRaw(command: String, timeoutSeconds: Long = 15L): Pair<Int, String> =
         withContext(Dispatchers.IO) {
@@ -328,6 +336,7 @@ class S1GrpcStreamClient(
     private var activePendingResult: CompletableResult<*>? = null
 
     fun close() {
+        connectedPeer = null
         isClosedManually.set(true)
         stopCanStream()
         activePendingResult?.cancel("Client channel closed")

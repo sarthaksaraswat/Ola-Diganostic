@@ -410,6 +410,46 @@ object NetworkScanner {
         return ifaces
     }
 
+    internal fun sharesNetworkPrefix(peer: InetAddress, local: InetAddress, prefixLength: Int): Boolean {
+        val peerBytes = peer.address
+        val localBytes = local.address
+        if (peerBytes.size != localBytes.size || prefixLength !in 1..(localBytes.size * 8)) return false
+
+        val wholeBytes = prefixLength / 8
+        for (index in 0 until wholeBytes) {
+            if (peerBytes[index] != localBytes[index]) return false
+        }
+
+        val remainingBits = prefixLength % 8
+        if (remainingBits == 0) return true
+        val mask = 0xFF shl (8 - remainingBits)
+        return ((peerBytes[wholeBytes].toInt() xor localBytes[wholeBytes].toInt()) and mask) == 0
+    }
+
+    /** Checks the resolved connection address against active Wi-Fi and hotspot links. */
+    fun isOnWifiLink(context: Context, peer: InetAddress): Boolean {
+        if (peer.isLoopbackAddress || peer.isAnyLocalAddress || peer.isMulticastAddress) return false
+
+        return getActiveWifiInterfaces(context).any { name ->
+            try {
+                val wifi = NetworkInterface.getByName(name) ?: return@any false
+                if (!wifi.isUp || wifi.isLoopback || wifi.isPointToPoint) return@any false
+                if (peer is java.net.Inet6Address && peer.isLinkLocalAddress && peer.scopeId != wifi.index) {
+                    return@any false
+                }
+                wifi.interfaceAddresses.any { link ->
+                    val local = link.address
+                    peer != local && peer != link.broadcast &&
+                        sharesNetworkPrefix(peer, local, link.networkPrefixLength.toInt())
+                }
+            } catch (_: java.net.SocketException) {
+                false
+            } catch (_: SecurityException) {
+                false
+            }
+        }
+    }
+
     /**
      * Resolves whatever host the user typed or had saved into the best connection target.
      * Uses direct resolution without raw socket probing on port 50005 (matching S1Mods pattern)
