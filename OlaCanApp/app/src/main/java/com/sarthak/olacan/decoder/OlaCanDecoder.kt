@@ -708,9 +708,12 @@ class OlaCanDecoder {
 
             ID_MCU_FAULTS -> {
                 val b0 = u8(d, 0)
+                val b1 = u8(d, 1)
+                val b2 = u8(d, 2)
                 val b3 = u8(d, 3)
                 val b6 = u8(d, 6)
 
+                // --- Byte 0: Power Stage & Inverter Protection ---
                 updateAlert(
                     id = "mcuOvercurrent",
                     title = "MCU Overcurrent Protection",
@@ -730,6 +733,33 @@ class OlaCanDecoder {
                     isActive = (b0 and 0x02) != 0
                 )
                 updateAlert(
+                    id = "motorStallFault",
+                    title = "Motor Stall Fault",
+                    description = "Motor rotor locked or stalled under active drive command",
+                    severity = AlertSeverity.CRITICAL,
+                    component = "MOTOR",
+                    sourceCanId = "0x333",
+                    isActive = (b0 and 0x04) != 0
+                )
+                updateAlert(
+                    id = "motorOverspeed",
+                    title = "Motor Overspeed Fault",
+                    description = "Motor rotational speed exceeded maximum Grade 3 limit",
+                    severity = AlertSeverity.CRITICAL,
+                    component = "MOTOR",
+                    sourceCanId = "0x333",
+                    isActive = (b0 and 0x08) != 0
+                )
+                updateAlert(
+                    id = "mcuCanFail",
+                    title = "MCU Communication Failure",
+                    description = "Abnormal internal bus communication failure between MCU and VCU",
+                    severity = AlertSeverity.CRITICAL,
+                    component = "MCU",
+                    sourceCanId = "0x333",
+                    isActive = (b0 and 0x10) != 0
+                )
+                updateAlert(
                     id = "mcuOvertemp",
                     title = "MCU Inverter Overtemperature",
                     description = "Motor controller heatsink temperature exceeded thermal threshold",
@@ -743,16 +773,157 @@ class OlaCanDecoder {
                     title = "Motor Stator Overtemperature",
                     description = "Motor stator winding temperature exceeded safe thermal threshold",
                     severity = AlertSeverity.WARNING,
-                    component = "MCU",
+                    component = "MOTOR",
                     sourceCanId = "0x333",
                     isActive = (b0 and 0x80) != 0
                 )
+
+                // --- Byte 1: Rotor Angle, PWM & Tuning Diagnostics ---
+                updateAlert(
+                    id = "mcuPosCntMismatch",
+                    title = "Rotor Position Counter Mismatch (Hub / IPM Motor)",
+                    description = "Motor rotor position counter mismatch with PWM generation. Rotor angle desynchronized; drive inhibited. (On S1 Air Hub Motor: roll scooter ~0.5m forward/backward, or perform 15s hard reset).",
+                    severity = AlertSeverity.CRITICAL,
+                    component = "MCU / MOTOR",
+                    sourceCanId = "0x333",
+                    isActive = (b1 and 0x01) != 0
+                )
+                updateAlert(
+                    id = "mcuPwmMissing",
+                    title = "Gate Driver PWM Signal Missing",
+                    description = "Gate driver PWM control signal missing or interrupted",
+                    severity = AlertSeverity.CRITICAL,
+                    component = "MCU",
+                    sourceCanId = "0x333",
+                    isActive = (b1 and 0x02) != 0
+                )
+                updateAlert(
+                    id = "mcuSwOvervoltageFault",
+                    title = "MCU Software Overvoltage Protection",
+                    description = "Software-level DC bus overvoltage threshold exceeded",
+                    severity = AlertSeverity.CRITICAL,
+                    component = "MCU",
+                    sourceCanId = "0x333",
+                    isActive = (b1 and 0x04) != 0
+                )
+                updateAlert(
+                    id = "motorParamTuningFail",
+                    title = "Motor Parameter Tuning Failure",
+                    description = "Automatic motor parameter identification or angle calibration failed",
+                    severity = AlertSeverity.WARNING,
+                    component = "MCU / MOTOR",
+                    sourceCanId = "0x333",
+                    isActive = (b1 and 0x08) != 0
+                )
+                updateAlert(
+                    id = "uPhaseHallFault",
+                    title = "Phase U Hall Sensor Fault",
+                    description = "Phase U position Hall sensor signal missing or noisy",
+                    severity = AlertSeverity.CRITICAL,
+                    component = "MOTOR",
+                    sourceCanId = "0x333",
+                    isActive = (b1 and 0x10) != 0
+                )
+                updateAlert(
+                    id = "dcBusUndervoltageFault",
+                    title = "DC Bus Undervoltage Fault",
+                    description = "Inverter DC bus voltage dropped below minimum operating limit",
+                    severity = AlertSeverity.CRITICAL,
+                    component = "MCU",
+                    sourceCanId = "0x333",
+                    isActive = (b1 and 0x20) != 0
+                )
+                updateAlert(
+                    id = "motorTempSensorDisconnectFault",
+                    title = "Motor Temp Sensor Disconnected",
+                    description = "Motor thermistor sensing line open circuit",
+                    severity = AlertSeverity.WARNING,
+                    component = "MOTOR",
+                    sourceCanId = "0x333",
+                    isActive = (b1 and 0x40) != 0
+                )
+                updateAlert(
+                    id = "drivePowerUndervoltageFault",
+                    title = "Gate Drive Power Supply Undervoltage",
+                    description = "Gate driver isolated 15V power supply rail undervoltage",
+                    severity = AlertSeverity.CRITICAL,
+                    component = "MCU",
+                    sourceCanId = "0x333",
+                    isActive = (b1 and 0x80) != 0
+                )
+
+                // --- Byte 2: Inverter Stage & Hall Hardware Lines ---
+                updateAlert(
+                    id = "controllerDriveAbnormalFault",
+                    title = "Abnormal Inverter Drive Fault",
+                    description = "Unexpected current or switching behavior detected in inverter stage",
+                    severity = AlertSeverity.CRITICAL,
+                    component = "MCU",
+                    sourceCanId = "0x333",
+                    isActive = (b2 and 0x01) != 0
+                )
+                updateAlert(
+                    id = "lowVoltageSupplyUndervoltFault",
+                    title = "MCU 12V Supply Undervoltage",
+                    description = "MCU auxiliary 12V control power supply dropped below limit",
+                    severity = AlertSeverity.WARNING,
+                    component = "MCU",
+                    sourceCanId = "0x333",
+                    isActive = (b2 and 0x02) != 0
+                )
+                updateAlert(
+                    id = "uPhaseHallDisconnectFault",
+                    title = "Phase U Hall Disconnected",
+                    description = "Phase U Hall position sensor line disconnected",
+                    severity = AlertSeverity.CRITICAL,
+                    component = "MOTOR",
+                    sourceCanId = "0x333",
+                    isActive = (b2 and 0x04) != 0
+                )
+                updateAlert(
+                    id = "vPhaseHallDisconnectFault",
+                    title = "Phase V Hall Disconnected",
+                    description = "Phase V Hall position sensor line disconnected",
+                    severity = AlertSeverity.CRITICAL,
+                    component = "MOTOR",
+                    sourceCanId = "0x333",
+                    isActive = (b2 and 0x08) != 0
+                )
+                updateAlert(
+                    id = "wPhaseHallDisconnectFault",
+                    title = "Phase W Hall Disconnected",
+                    description = "Phase W Hall position sensor line disconnected",
+                    severity = AlertSeverity.CRITICAL,
+                    component = "MOTOR",
+                    sourceCanId = "0x333",
+                    isActive = (b2 and 0x10) != 0
+                )
+                updateAlert(
+                    id = "vPhaseHallAbnormalFault",
+                    title = "Phase V Hall Signal Abnormal",
+                    description = "Phase V Hall position sensor timing sequence invalid",
+                    severity = AlertSeverity.WARNING,
+                    component = "MOTOR",
+                    sourceCanId = "0x333",
+                    isActive = (b2 and 0x20) != 0
+                )
+                updateAlert(
+                    id = "wPhaseHallAbnormalFault",
+                    title = "Phase W Hall Signal Abnormal",
+                    description = "Phase W Hall position sensor timing sequence invalid",
+                    severity = AlertSeverity.WARNING,
+                    component = "MOTOR",
+                    sourceCanId = "0x333",
+                    isActive = (b2 and 0x40) != 0
+                )
+
+                // --- Byte 3: Throttle Sensors & Encoder Quadrature Pulses ---
                 updateAlert(
                     id = "throttleWiper1Fail",
                     title = "Throttle Sensor Wiper 1 Fail",
                     description = "Twist grip potentiometer channel 1 signal lost or shorted",
                     severity = AlertSeverity.CRITICAL,
-                    component = "MCU",
+                    component = "THROTTLE",
                     sourceCanId = "0x333",
                     isActive = (b3 and 0x08) != 0
                 )
@@ -761,10 +932,30 @@ class OlaCanDecoder {
                     title = "Throttle Sensor Wiper 2 Fail",
                     description = "Twist grip potentiometer channel 2 signal lost or shorted",
                     severity = AlertSeverity.CRITICAL,
-                    component = "MCU",
+                    component = "THROTTLE",
                     sourceCanId = "0x333",
                     isActive = (b3 and 0x10) != 0
                 )
+                updateAlert(
+                    id = "abPulseMismZiPulseFault",
+                    title = "Encoder AB Pulse Z Mismatch",
+                    description = "Rotor encoder quadrature pulses mismatch with index pulse",
+                    severity = AlertSeverity.WARNING,
+                    component = "MOTOR",
+                    sourceCanId = "0x333",
+                    isActive = (b3 and 0x20) != 0
+                )
+                updateAlert(
+                    id = "ziPulseMissingFault",
+                    title = "Encoder Index Pulse Missing",
+                    description = "Rotor encoder zero-index pulse missing during motor rotation",
+                    severity = AlertSeverity.WARNING,
+                    component = "MOTOR",
+                    sourceCanId = "0x333",
+                    isActive = (b3 and 0x40) != 0
+                )
+
+                // --- Byte 6: Inverter Derating ---
                 updateAlert(
                     id = "mcuDerating",
                     title = "MCU Thermal Derating Active",
@@ -774,9 +965,20 @@ class OlaCanDecoder {
                     sourceCanId = "0x333",
                     isActive = (b6 and 0x01) != 0
                 )
+
+                // --- Bytes 4 & 5: Calibration Verification ---
                 if (d.size >= 6) {
                     successfulCalibrationCounter = u8(d, 4)
                     attemptedCalibrationCounter = u8(d, 5)
+                    updateAlert(
+                        id = "mcuUncalibrated",
+                        title = "MCU Motor Angle Uncalibrated",
+                        description = "Inverter has 0 verified rotor position calibration records in active memory. Run Motor Parameter Tuning (0x335) or perform cold reboot.",
+                        severity = AlertSeverity.WARNING,
+                        component = "MCU / MOTOR",
+                        sourceCanId = "0x333",
+                        isActive = (successfulCalibrationCounter == 0 && attemptedCalibrationCounter == 0)
+                    )
                 }
             }
 

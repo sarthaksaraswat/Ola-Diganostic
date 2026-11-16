@@ -681,8 +681,8 @@
    "description": "Motor rotor locked or stalled under active drive command.",
    "severity": "CRITICAL",
    "component": "MCU",
-   "fixable": false,
-   "postFixMessage": null
+   "fixable": true,
+   "postFixMessage": "Check rear wheel for mechanical binding, locked brake caliper, or obstruction. Ensure rear wheel spins freely by hand."
   },
   {
    "id": "motorOverspeed",
@@ -722,12 +722,12 @@
   },
   {
    "id": "mcuPosCntMismatch",
-   "title": "Position Counter Mismatch",
-   "description": "Rotor position counter mismatch detected with PWM generation.",
+   "title": "Rotor Position Counter Mismatch (Hub/IPM Motor)",
+   "description": "Rotor position counter mismatch detected with PWM generation. Rotor angle desynchronized; drive inhibited to protect motor and inverter.",
    "severity": "WARNING",
    "component": "MCU",
-   "fixable": false,
-   "postFixMessage": null
+   "fixable": true,
+   "postFixMessage": "1) S1 Air Hub Motor: Roll scooter forward/backward ~0.5–1m with feet to clear Hall magnetic deadzone, then retry Drive. 2) 15-second hard reboot (Power + Reverse/Brake). 3) Re-run Motor Angle Tuning (0x335). 4) Inspect rear swingarm cable entry at axle."
   },
   {
    "id": "mcuPwmMissing",
@@ -750,20 +750,20 @@
   {
    "id": "motorParamTuningFail",
    "title": "Motor Parameter Tuning Failure",
-   "description": "Automatic motor parameter identification or calibration failed.",
+   "description": "Automatic motor parameter identification or zero-angle calibration failed.",
    "severity": "WARNING",
    "component": "MCU",
-   "fixable": false,
-   "postFixMessage": null
+   "fixable": true,
+   "postFixMessage": "Elevate rear wheel off the ground and execute Motor Parameter Identification (0x335) from the diagnostic menu without load."
   },
   {
    "id": "uPhaseHallFault",
    "title": "Phase U Hall Sensor Fault",
-   "description": "Phase U position Hall sensor signal missing or noisy.",
+   "description": "Phase U position Hall sensor signal missing or noisy on hub/drive motor.",
    "severity": "CRITICAL",
    "component": "MCU",
-   "fixable": false,
-   "postFixMessage": null
+   "fixable": true,
+   "postFixMessage": "Check motor Hall sensor wiring along rear swingarm (S1 Air) or motor plug (S1 Pro). Verify 5V auxiliary Hall supply rail."
   },
   {
    "id": "dcBusUndervoltageFault",
@@ -798,62 +798,62 @@
    "description": "Unexpected current or switching behavior detected in inverter stage.",
    "severity": "CRITICAL",
    "component": "MCU",
-   "fixable": false,
-   "postFixMessage": null
+   "fixable": true,
+   "postFixMessage": "Perform 15-second hard reboot. If fault recurs upon shifting to Drive, inspect phase terminal lugs for short-circuit or loose bolts."
   },
   {
    "id": "lowVoltageSupplyUndervoltFault",
    "title": "MCU 12V Supply Undervoltage",
-   "description": "MCU auxiliary 12V control power supply dropped below limit.",
+   "description": "MCU auxiliary 12V control power supply dropped below operating limit.",
    "severity": "WARNING",
    "component": "MCU",
-   "fixable": false,
-   "postFixMessage": null
+   "fixable": true,
+   "postFixMessage": "Traction battery or DC-DC converter output low. Connect AC charger to restore 12V rail stability."
   },
   {
    "id": "uPhaseHallDisconnectFault",
    "title": "Phase U Hall Disconnected",
-   "description": "Phase U Hall position sensor line disconnected.",
+   "description": "Phase U Hall position sensor line disconnected or open-circuit.",
    "severity": "CRITICAL",
    "component": "MCU",
-   "fixable": false,
-   "postFixMessage": null
+   "fixable": true,
+   "postFixMessage": "Inspect motor low-voltage connector at rear wheel axle (S1 Air) or main motor signal harness. Check for backed-out pins."
   },
   {
    "id": "vPhaseHallDisconnectFault",
    "title": "Phase V Hall Disconnected",
-   "description": "Phase V Hall position sensor line disconnected.",
+   "description": "Phase V Hall position sensor line disconnected or open-circuit.",
    "severity": "CRITICAL",
    "component": "MCU",
-   "fixable": false,
-   "postFixMessage": null
+   "fixable": true,
+   "postFixMessage": "Inspect motor low-voltage connector at rear wheel axle (S1 Air) or main motor signal harness. Check for backed-out pins."
   },
   {
    "id": "wPhaseHallDisconnectFault",
    "title": "Phase W Hall Disconnected",
-   "description": "Phase W Hall position sensor line disconnected.",
+   "description": "Phase W Hall position sensor line disconnected or open-circuit.",
    "severity": "CRITICAL",
    "component": "MCU",
-   "fixable": false,
-   "postFixMessage": null
+   "fixable": true,
+   "postFixMessage": "Inspect motor low-voltage connector at rear wheel axle (S1 Air) or main motor signal harness. Check for backed-out pins."
   },
   {
    "id": "vPhaseHallAbnormalFault",
    "title": "Phase V Hall Signal Abnormal",
-   "description": "Phase V Hall position sensor timing sequence invalid.",
+   "description": "Phase V Hall position sensor timing sequence invalid or noisy.",
    "severity": "WARNING",
    "component": "MCU",
-   "fixable": false,
-   "postFixMessage": null
+   "fixable": true,
+   "postFixMessage": "Clean rear wheel hub axle connector of moisture or dirt. Roll wheel by hand to verify sensor state transitions in live telemetry."
   },
   {
    "id": "wPhaseHallAbnormalFault",
    "title": "Phase W Hall Signal Abnormal",
-   "description": "Phase W Hall position sensor timing sequence invalid.",
+   "description": "Phase W Hall position sensor timing sequence invalid or noisy.",
    "severity": "WARNING",
    "component": "MCU",
-   "fixable": false,
-   "postFixMessage": null
+   "fixable": true,
+   "postFixMessage": "Clean rear wheel hub axle connector of moisture or dirt. Roll wheel by hand to verify sensor state transitions in live telemetry."
   },
   {
    "id": "throttleWiper1Fail",
@@ -879,8 +879,8 @@
    "description": "Rotor encoder quadrature pulses mismatch with index pulse.",
    "severity": "WARNING",
    "component": "MCU",
-   "fixable": false,
-   "postFixMessage": null
+   "fixable": true,
+   "postFixMessage": "Re-seat motor encoder connector and run motor angle auto-tuning routine."
   },
   {
    "id": "ziPulseMissingFault",
@@ -888,8 +888,8 @@
    "description": "Rotor encoder zero-index pulse missing during motor rotation.",
    "severity": "WARNING",
    "component": "MCU",
-   "fixable": false,
-   "postFixMessage": null
+   "fixable": true,
+   "postFixMessage": "Inspect encoder shield wire for ground noise or chafing against chassis."
   },
   {
    "id": "idIqRefTableError",
