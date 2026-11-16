@@ -88,3 +88,19 @@ Phone (Hotspot / Wi-Fi)
          │
          └─> ExecuteADBCommand: MoveOS ECU query, lock, and diagnostic control calls
 ```
+
+---
+
+## 👨‍💻 Author & Collaboration
+
+This app was engineered from scratch in **2 days over a weekend**! Contributions, bug reports, and ideas are warmly welcomed — feel free to connect and collaborate.
+
+<p align="left">
+  <a href="https://www.linkedin.com/in/sarthaksaraswat/" target="_blank">
+    <img src="https://img.shields.io/badge/LinkedIn-Connect-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn" />
+  </a>
+  &nbsp;
+  <a href="https://buymeacoffee.com/sarthaksaraswat" target="_blank">
+    <img src="https://img.shields.io/badge/Buy_Me_A_Coffee-Support-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me a Coffee" />
+  </a>
+</p>
