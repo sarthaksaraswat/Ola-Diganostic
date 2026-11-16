@@ -26,9 +26,16 @@ local.properties
 # Local binaries and signing material
 *.apk
 !/OlaDiagnostic-v*.apk
+*.idsig
 *.aab
 *.jks
 *.keystore
 keystore.properties
 .env
 .env.*
+
+# Auxiliary reference folders
+/ola-s1-mods-*/
+/ola-s1-rea-*/
+/gateway/
+

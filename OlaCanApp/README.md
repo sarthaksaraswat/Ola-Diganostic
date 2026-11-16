@@ -1,75 +1,73 @@
 <p align="center">
-  <img src="../ola_diagnostic_icon.png" width="128" height="128" alt="Ola Diagnostic Icon" />
+  <img src="../ola_diagnostic_icon.png" width="120" height="120" alt="Ola Diagnostic Icon" />
 </p>
 
-# 🛵 Ola Diagnostic
+# 🛵 Ola Diagnostic (OlaCanApp)
 
-A standalone Android mobile application built with **Kotlin & Jetpack Compose** to connect to MoveOS on the Ola S1 series (model and firmware support varies) over local Wi-Fi / Hotspot, stream raw vehicle CAN bus traffic (`vcan0`), display real-time automotive telemetry, and generate diagnostic summaries from the captured data.
+A modern Android application built with **Kotlin & Jetpack Compose** to connect to MoveOS on the Ola S1 series (Gen 1 & Gen 2) over local Wi-Fi / Hotspot, stream raw vehicle CAN bus traffic (`vcan0`), display real-time automotive telemetry, execute vehicle controls, and perform comprehensive diagnostic health assessments.
 
 ---
 
-## ⚡ Quick Start: How to Use
+> [!CAUTION]
+> **Warranty & Disclaimer:**
+> This project is an independent tool and is **NOT affiliated with or endorsed by Ola Electric Mobility Pvt Ltd**. Using diagnostic functions or transmitting custom CAN frames may **void your vehicle warranty**. Use responsibly and at your own risk.
 
-1. **Build the app:** Run `./gradlew :app:assembleDebug` for development testing. Debug builds are for development testing.
-2. **Scooter Wi-Fi Setup:**
+---
+
+## ⚡ Quick Start
+
+1. **Install APK or Build:**
+   - Install the signed release **`../OlaDiagnostic-v2.0.2.apk`** directly on your device.
+   - Or build debug build from source:
+     ```bash
+     ./gradlew :app:assembleDebug
+     ```
+2. **Scooter Hotspot Setup:**
    - Turn on **Personal Hotspot** on your phone.
    - On the scooter touchscreen, go to **Settings > Wi-Fi** and connect to your phone's hotspot.
-   - Wake the scooter using its normal dashboard controls while parked.
-3. **Launch the App:**
-   - Tap **Auto-Scan for Scooter** (or enter the IP e.g. `192.168.1.134` or MAC address).
-   - Tap **Connect** — the app immediately connects to MoveOS diagnostics daemon (Port `50005`) and begins streaming live vehicle CAN frames!
+   - Keep the scooter **side stand UP** while testing.
+3. **Connect:**
+   - Tap **Auto-Scan for Scooter** (or enter the IP).
+   - Tap **Connect** to dial MoveOS diagnostics daemon (Port `50005`) and begin live CAN telemetry streaming!
 
 ---
 
 ## 📊 Categorized Tabs & Features
 
-### 1. ⚡ Overview Dashboard
-- **State of Charge (SOC):** Real-time battery SOC percentage and dashboard display SOC.
-- **State of Health (SOH):** Estimated pack health percentage.
-- **Pack Voltage & Current:** Live bus voltage (V) and current (A), with instant charging vs discharging state.
-- **Instant Power (kW):** Real-time motor power draw or regenerative braking input.
-- **Cell Delta Spread (mV):** Health difference between highest and lowest cell voltages.
-- **Speed & Motor RPM:** Calculated live vehicle speed (km/h) and motor stator RPM.
-- **Odometer:** Total lifetime distance traveled (km).
+### 1. ⚡ Cockpit
+- **Speedometer & Rotor RPM:** Real-time vehicle speed and motor stator RPM.
+- **Pack Voltage & Current:** High-voltage bus level (V) and real-time current draw / charge (A).
+- **Instant Power (kW) & Odometer:** Real-time motor power draw and lifetime odometer.
+- **Cell Delta Spread (mV):** Imbalance difference between highest and lowest cell voltages.
 
-### 2. 🔋 14S Battery & Cell Balancer
-- **14 Individual NMC Series Cell Voltages:**
-  - Real-time voltages for channels 1 through 14 (derived from CAN IDs `0x1A5`, `0x1A6`, `0x1A9`, `0x1AA`).
-  - Visual color-coded progress bars (3.0V to 4.2V range).
-  - Dynamic **LOW** and **HIGH** cell badges to immediately identify cell drift and pack imbalance.
-- **6 Pack Temperature Sensors:** Multi-probe temperature readings across the pack (`0x1A4`, `0x1A7`).
+### 2. 🔋 14S Battery Balancer & Health
+- **14 Individual NMC Cell Voltages:** Channels 1 to 14 voltages (`0x1A5`, `0x1A6`, `0x1A9`, `0x1AA`) with min/max indicator badges.
+- **Dynamic Rest vs Under-Load Sag:** Differential analysis comparing resting OCV against peak acceleration (>50A).
+- **6 Pack Thermal Probes:** Readings across Front, Left, Right, Rear, Core, and BMS AFE probes.
+- **Coulomb SOH Estimator:** Usable kWh and health percentage calculation based on discharged ampere-hours.
 
 ### 3. 🏍️ Motor & Thermals
-- **Motor Stator & MCU Inverter Temperatures:**
-  - Gauges with MoveOS thermal protection thresholds:
-    - Normal (< 85°C)
-    - Warning (95°C / 147°C)
-    - Derate (105°C / 157°C throttle cut)
-    - Emergency Cutoff (115°C / 165°C)
-- **BMS AFE & PDU Temperatures:** Auxiliary electronic temperatures (`0x1A8`).
+- **Stator & MCU Inverter Temps:** Live gauges with MoveOS derate alerts (Normal <85°C, Derate 105°C/157°C, Cutoff 115°C/165°C).
+- **Traction & Slip Ratio:** Real-time wheel slip calculation from front wheel Hall sensor vs motor rotor resolver.
+- **Throttle Calibration:** Live monitoring of throttle angle (Reverse Regen, Neutral, WOT 100%).
 
-### 4. 🛡️ Safety & ECU Diagnostics
-- **Vehicle Safety Flags (`0x683`):**
-  - Side stand sensor state
-  - Hill Hold Assist state
-  - Regenerative braking dial level (Off, Low 5%, Med 10%, High 15%)
-  - Fall / crash detection alert
-  - Tow / tamper alert
-- **Installed ECU Firmware Versions:**
-  - VCU Firmware & Bootloader
-  - BMS Firmware & Bootloader
-  - MCU Firmware
-  - Head Unit (HU) Firmware & Bootloader
-  - BLE & MoveOS release versions
+### 4. ⚠️ Faults & Safety
+- **Active Safety Flags:** Kickstand sensor, fall/crash alerts, hill hold state, and anti-theft triggers.
+- **ECU Firmware Versions:** Readout of VCU, BMS, MCU, and Head Unit software releases.
+- **DTC Fault Catalog:** Built-in fault code descriptions and diagnostic insights.
 
-### 5. 📡 Raw CAN Stream & Optimized Logger
-- **One-Tap "Record Logs" / "Stop & Save":**
-  - Tap **Record Logs** to capture incoming CAN frames live from `vcan0`.
-  - Displays a live recording banner: active blinking indicator, elapsed time (`MM:SS`), frame counter, and compressed storage size on disk.
-- **Streaming GZIP Storage (~85% Space Saving):**
-  - Rather than storing large uncompressed text files, frames are streamed directly through a memory-buffered **`GZIPOutputStream`** into `.csv.gz`.
-  - Exports to the public **`Downloads/OlaCAN/`** folder (e.g. `OlaCAN_20261113_232140.csv.gz`).
-  - Standard CSV format: `timestamp_ms,id_hex,dlc,data_hex` (compatible with SavvyCAN, Python Pandas, Excel, or VS Code).
+### 5. 🔧 Calibrate & Vehicle Controls
+- **Instant Lock & Unlock:** Power management key events paired with CAN `0x6A1`/`0x6BC`.
+- **Boot / Seat Release:** Direct trigger for trunk solenoid unlatch.
+- **Screen Wake:** Wake and dismiss display lock screen.
+- **BMS AFE Fault Unlatch:** Clear persistent AFE register lockouts via CAN `0x6DA`.
+- **Dynamic Regen Level:** Adjust regenerative braking deceleration levels via CAN `0x115`.
+- **Automated Self-Test:** Step-by-step interactive test sequence for all scooter subsystems.
+
+### 6. 📡 CAN Logs & Diagnostics
+- **Live `vcan0` Stream:** Real-time message rate counter (Hz) and raw hexadecimal frame monitor.
+- **Compressed GZIP Logger:** Memory-buffered `.csv.gz` recording (~85% space saving) saved to `Downloads/OlaCAN/`.
+- **PDF Report Generator:** Export formatted diagnostic reports and SOH certificates directly on the device.
 
 ---
 
@@ -88,13 +86,5 @@ Phone (Hotspot / Wi-Fi)
          │           │
          │           └─> StateFlow: Reactive UI updates at 60 FPS (Jetpack Compose)
          │
-         └─> ExecuteADBCommand: Unary queries for MoveOS ECU firmware versions
+         └─> ExecuteADBCommand: MoveOS ECU query, lock, and diagnostic control calls
 ```
-
----
-
-## Safety and compatibility
-
-Release builds support live lock/unlock, seat release, display wake, restart, AFE reset, and regen requests on local Wi-Fi or hotspot. Live commands require fresh stationary speed telemetry. The app reports acknowledged requests and shows vehicle state separately from live telemetry. Demo mode simulates the dashboard without a vehicle connection.
-
-The app uses the MoveOS diagnostic service over local Wi-Fi. The firmware check starts at MoveOS 4.0.5. Verify compatibility with your specific model and firmware. Vehicle use and maintenance decisions should follow the manufacturer's guidance.
